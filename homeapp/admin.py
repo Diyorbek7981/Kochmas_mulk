@@ -14,3 +14,26 @@ class HomeModelAdmin(admin.ModelAdmin):
 class PictureModelAdmin(admin.ModelAdmin):
     list_display = ['home', 'pic']
     list_display_links = ['home', 'pic']
+
+
+@admin.register(TypeModel)
+class TypeModelAdmin(admin.ModelAdmin):
+    list_display = ['name']
+    list_display_links = ['name']
+
+
+@admin.register(HomeTypeModel)
+class HomeTypeModelAdmin(admin.ModelAdmin):
+    list_display = ['name']
+    list_display_links = ['name']
+
+
+@admin.register(LocationModel)
+class LocationModelAdmin(admin.ModelAdmin):
+    list_display = ['name']
+    list_display_links = ['name']
+
+
+@admin.register(Users)
+class UserAdmin(admin.ModelAdmin):
+    list_display = ['username']
