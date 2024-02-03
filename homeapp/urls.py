@@ -12,4 +12,5 @@ urlpatterns = [
     path('hometypeall/<int:pk>', HomeTypeViewALL.as_view()),
     path('location/', LocationView.as_view()),
     path('locationall/<int:pk>', LocationViewALL.as_view()),
+    path('search/', HomeModelSearchView.as_view()),
 ]
