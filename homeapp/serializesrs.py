@@ -9,11 +9,17 @@ class UsersSerializer(ModelSerializer):
         fields = '__all__'
 
 
+class SearchSerializer(ModelSerializer):
+    class Meta:
+        model = SearchModel
+        fields = '__all__'
+
+
 class HomeSerializer(ModelSerializer):
-    user = serializers.HiddenField(
+    owner = serializers.HiddenField(
         default=serializers.CurrentUserDefault())  # user mizni yashirib unga aktiv bo'lgan foydalanuvchini o'rnatish uchun
     author = serializers.ReadOnlyField(
-        source='user.username')  # avtor maydoni yaratib unga userni qiymatini beramiz get requestda ko'rib turish uchun
+        source='owner.username')  # avtor maydoni yaratib unga userni qiymatini beramiz get requestda ko'rib turish uchun
 
     class Meta:
         model = HomeModel
@@ -21,11 +27,6 @@ class HomeSerializer(ModelSerializer):
 
 
 class PictureSerializer(ModelSerializer):
-    user = serializers.HiddenField(
-        default=serializers.CurrentUserDefault())
-    author = serializers.ReadOnlyField(
-        source='user.username')
-
     class Meta:
         model = PictureModel
         fields = '__all__'

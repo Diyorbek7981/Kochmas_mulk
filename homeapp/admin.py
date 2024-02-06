@@ -1,13 +1,25 @@
 from django.contrib import admin
 from .models import *
+from modeltranslation.admin import TranslationAdmin
 
 
 # Register your models here.
 
 @admin.register(HomeModel)
-class HomeModelAdmin(admin.ModelAdmin):
-    list_display = ['name', 'description', 'rate']
-    list_display_links = ['name', 'description', 'rate']
+class HomeModelAdmin(TranslationAdmin):
+    list_display = ['name', 'description']
+    list_display_links = ['name', 'description']
+
+    # translate u-n
+    class Media:
+        js = (
+            'http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js',
+            'http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js',
+            'modeltranslation/js/tabbed_translation_fields.js',
+        )
+        css = {
+            'screen': ('modeltranslation/css/tabbed_translation_fields.css',),
+        }
 
 
 @admin.register(PictureModel)
@@ -17,19 +29,19 @@ class PictureModelAdmin(admin.ModelAdmin):
 
 
 @admin.register(TypeModel)
-class TypeModelAdmin(admin.ModelAdmin):
+class TypeModelAdmin(TranslationAdmin):
     list_display = ['name']
     list_display_links = ['name']
 
 
 @admin.register(HomeTypeModel)
-class HomeTypeModelAdmin(admin.ModelAdmin):
+class HomeTypeModelAdmin(TranslationAdmin):
     list_display = ['name']
     list_display_links = ['name']
 
 
 @admin.register(LocationModel)
-class LocationModelAdmin(admin.ModelAdmin):
+class LocationModelAdmin(TranslationAdmin):
     list_display = ['name']
     list_display_links = ['name']
 

@@ -6,6 +6,8 @@ from django.conf.urls.static import static
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from rest_framework import permissions
+# translate uchun
+from django.conf.urls.i18n import i18n_patterns
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -31,4 +33,8 @@ urlpatterns = [
     path('auth-drf', include('rest_framework.urls')),  # new
     re_path(r'^auth/', include('djoser.urls')),  # new
     re_path(r'^auth/', include('djoser.urls.authtoken')),  # new
+]
+# translate u-n
+urlpatterns = [
+    *i18n_patterns(*urlpatterns, prefix_default_language=False),
 ]

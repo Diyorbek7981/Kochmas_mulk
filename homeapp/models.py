@@ -43,17 +43,20 @@ class HomeModel(models.Model):
     name = models.CharField(max_length=150)
     type = models.ForeignKey(TypeModel, on_delete=models.CASCADE)
     home_type = models.ForeignKey(HomeTypeModel, on_delete=models.CASCADE)
+    count_rooms = models.IntegerField(default=0,
+                                      validators=[MaxValueValidator(10), MinValueValidator(0)])
     description = models.TextField()
-    price = models.DecimalField(max_digits=8, decimal_places=2)
-    rate = models.IntegerField(default=0, validators=[MaxValueValidator(5), MinValueValidator(0)])
+    price = models.DecimalField(max_digits=8,
+                                decimal_places=2,
+                                validators=[MinValueValidator(0)])
     location = models.ForeignKey(LocationModel, on_delete=models.CASCADE)
     owner = models.ForeignKey(Users, on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Kochmas mulk'
-        verbose_name_plural = 'Kochmas mulklar'
+        verbose_name = 'Ko`chmas mulk'
+        verbose_name_plural = 'Ko`chmas mulklar'
         ordering = ['-created']
 
     def __str__(self):
@@ -63,7 +66,22 @@ class HomeModel(models.Model):
 class PictureModel(models.Model):
     pic = models.ImageField(upload_to='home/')
     home = models.ForeignKey(HomeModel, on_delete=models.CASCADE)
-    owner = models.ForeignKey(Users, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.home.name
+
+
+class SearchModel(models.Model):
+    type = models.ForeignKey(TypeModel, on_delete=models.CASCADE)
+    home_type = models.ForeignKey(HomeTypeModel, on_delete=models.CASCADE)
+    count_rooms = models.IntegerField(default=0, validators=[MaxValueValidator(10), MinValueValidator(0)])
+    price = models.DecimalField(max_digits=8, decimal_places=2,
+                                validators=[MinValueValidator(0)],
+                                null=True,
+                                blank=True)
+    up_low = models.IntegerField(default=0,
+                                 validators=[MaxValueValidator(1), MinValueValidator(0)],
+                                 null=True,
+                                 blank=True
+                                 )
+    location = models.ForeignKey(LocationModel, on_delete=models.CASCADE)
