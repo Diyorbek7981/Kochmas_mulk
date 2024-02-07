@@ -18,12 +18,13 @@ class SearchSerializer(ModelSerializer):
 class HomeSerializer(ModelSerializer):
     owner = serializers.HiddenField(
         default=serializers.CurrentUserDefault())  # user mizni yashirib unga aktiv bo'lgan foydalanuvchini o'rnatish uchun
-    author = serializers.ReadOnlyField(
+    owner = serializers.ReadOnlyField(
         source='owner.username')  # avtor maydoni yaratib unga userni qiymatini beramiz get requestda ko'rib turish uchun
 
     class Meta:
         model = HomeModel
-        fields = '__all__'
+        fields = ['name', 'type', 'home_type', 'count_rooms', 'description', 'price', 'location', 'owner', 'created',
+                  'updated']
 
 
 class PictureSerializer(ModelSerializer):
@@ -41,10 +42,4 @@ class TypeSerializer(ModelSerializer):
 class HomeTypeSerializer(ModelSerializer):
     class Meta:
         model = HomeTypeModel
-        fields = '__all__'
-
-
-class LocationSerializer(ModelSerializer):
-    class Meta:
-        model = LocationModel
         fields = '__all__'

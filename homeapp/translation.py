@@ -4,16 +4,11 @@ from modeltranslation.translator import TranslationOptions, register
 
 @register(HomeModel)
 class HomeModelTranslation(TranslationOptions):
-    fields = ('name', 'type', 'home_type', 'description', 'location')
+    fields = ('name', 'description')
 
 
 @register(TypeModel)
 class TypeTranslation(TranslationOptions):
-    fields = ('name',)
-
-
-@register(LocationModel)
-class LocationTranslation(TranslationOptions):
     fields = ('name',)
 
 

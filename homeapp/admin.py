@@ -5,12 +5,8 @@ from modeltranslation.admin import TranslationAdmin
 
 # Register your models here.
 
-@admin.register(HomeModel)
-class HomeModelAdmin(TranslationAdmin):
-    list_display = ['name', 'description']
-    list_display_links = ['name', 'description']
-
-    # translate u-n
+# translate u-n
+class TaskAdmin():
     class Media:
         js = (
             'http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js',
@@ -22,6 +18,12 @@ class HomeModelAdmin(TranslationAdmin):
         }
 
 
+@admin.register(HomeModel)
+class HomeModelAdmin(TranslationAdmin, TaskAdmin):
+    list_display = ['name', 'description']
+    list_display_links = ['name', 'description']
+
+
 @admin.register(PictureModel)
 class PictureModelAdmin(admin.ModelAdmin):
     list_display = ['home', 'pic']
@@ -29,19 +31,13 @@ class PictureModelAdmin(admin.ModelAdmin):
 
 
 @admin.register(TypeModel)
-class TypeModelAdmin(TranslationAdmin):
+class TypeModelAdmin(TranslationAdmin, TaskAdmin):
     list_display = ['name']
     list_display_links = ['name']
 
 
 @admin.register(HomeTypeModel)
-class HomeTypeModelAdmin(TranslationAdmin):
-    list_display = ['name']
-    list_display_links = ['name']
-
-
-@admin.register(LocationModel)
-class LocationModelAdmin(TranslationAdmin):
+class HomeTypeModelAdmin(TranslationAdmin, TaskAdmin):
     list_display = ['name']
     list_display_links = ['name']
 

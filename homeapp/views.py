@@ -27,10 +27,9 @@ class HomeModelSearchView(generics.ListAPIView):
                 Q(type__name__icontains=serializer.validated_data['type'])
             )
 
-            if 'home_type' in serializer.validated_data:
-                queryset = queryset.filter(
-                    Q(home_type__name__icontains=serializer.validated_data['home_type'])
-                )
+            queryset = queryset.filter(
+                Q(home_type__name__icontains=serializer.validated_data['home_type'])
+            )
 
             if 'count_rooms' in serializer.validated_data:
                 queryset = queryset.filter(
@@ -39,20 +38,31 @@ class HomeModelSearchView(generics.ListAPIView):
 
             if 'location' in serializer.validated_data:
                 queryset = queryset.filter(
-                    Q(location__name__icontains=serializer.validated_data['location'])
+                    Q(location__icontains=serializer.validated_data['location'])
                 )
 
-            if 'price' in serializer.validated_data:
+            if 'from_price' and 'up_to_price' in serializer.validated_data:
+                price = serializer.validated_data['from_price']
+                price1 = serializer.validated_data['up_to_price']
 
-                price = serializer.validated_data['price']
-                up_lo = serializer.validated_data['up_low']
-                if up_lo == 0:
-                    queryset = queryset.filter(Q(price__lt=price))
-                elif up_lo == 1:
-                    queryset = queryset.filter(Q(price__gte=price))
+                if price is not None and price1 is not None:
+                    price = min(price, price1)
+                    price1 = max(price, price1)
 
-            serializer = HomeSerializer(queryset, many=True)
-            return Response(serializer.data)
+                    queryset = queryset.filter(
+                        Q(price__gte=price, price__lte=price1))
+
+                queryset = queryset.all()
+
+                # price = serializer.validated_data['price']
+                # up_lo = serializer.validated_data['up_low']
+                # if up_lo == 0:
+                #     queryset = queryset.filter(Q(price__lt=price))
+                # elif up_lo == 1:
+                #     queryset = queryset.filter(Q(price__gte=price))
+
+                serializer = HomeSerializer(queryset, many=True)
+                return Response(serializer.data)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -128,14 +138,3 @@ class HomeTypeViewALL(generics.RetrieveUpdateDestroyAPIView):
     queryset = HomeTypeModel.objects.all()
     serializer_class = HomeTypeSerializer
     permission_classes = [IsAdminOrReadOnly]
-
-
-class LocationView(generics.ListCreateAPIView):
-    queryset = LocationModel.objects.all()
-    serializer_class = LocationSerializer
-
-
-class LocationViewALL(generics.RetrieveUpdateDestroyAPIView):
-    queryset = LocationModel.objects.all()
-    serializer_class = LocationSerializer
-    permission_classes = [IsOwnerOrReadOnly]

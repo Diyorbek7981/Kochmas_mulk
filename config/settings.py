@@ -109,15 +109,14 @@ LOCALE_PATHS = [
 ]
 
 LANGUAGES = (
-    ('en', 'English'),
     ('uz', 'Uzbek'),
     ('ru', 'Russian')
 )
 
 MODELTRANSLATION_DEFAULT_LANGUAGE = 'uz'
-MODELTRANSLATION_LANGUAGES = ('en', 'uz', 'ru')
+MODELTRANSLATION_LANGUAGES = ('uz', 'ru')
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'uz-us'
 
 TIME_ZONE = 'Asia/Tashkent'
 

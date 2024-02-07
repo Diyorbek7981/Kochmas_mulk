@@ -10,7 +10,5 @@ urlpatterns = [
     path('typeall/<int:pk>', TypeViewALL.as_view()),
     path('hometype/', HomeTypeView.as_view()),
     path('hometypeall/<int:pk>', HomeTypeViewALL.as_view()),
-    path('location/', LocationView.as_view()),
-    path('locationall/<int:pk>', LocationViewALL.as_view()),
     path('api/v1/search/', HomeModelSearchView.as_view()),
 ]
