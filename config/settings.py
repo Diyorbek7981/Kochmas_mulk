@@ -29,6 +29,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',  # jazmin adin panel u-n
     'modeltranslation',  # translate u-n
     'django.contrib.admin',
     'django.contrib.auth',

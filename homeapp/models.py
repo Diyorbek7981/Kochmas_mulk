@@ -6,6 +6,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 # Create your models here.
 class Users(AbstractUser):
     phone = models.CharField(max_length=20, blank=True, null=True)
+    # image = models.ImageField(upload_to='owner/')
     bio = models.TextField(blank=True, null=True)
 
     def __str__(self):
@@ -58,6 +59,8 @@ class HomeModel(models.Model):
 class PictureModel(models.Model):
     pic = models.ImageField(upload_to='home/')
     home = models.ForeignKey(HomeModel, on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.home.name
@@ -67,12 +70,23 @@ class PictureModel(models.Model):
 #     (1, 'Up'),
 #     (0, 'Down'),
 # )
+CHOICES = (
+    (1, '1 xona'),
+    (2, '2 xona'),
+    (3, '3 xona'),
+    (4, '4 xona'),
+    (5, '5 xona'),
+    (6, '6 va undan ortiq xonalar'),
+)
 
 
 class SearchModel(models.Model):
     type = models.ForeignKey(TypeModel, on_delete=models.CASCADE)
     home_type = models.ForeignKey(HomeTypeModel, on_delete=models.CASCADE)
-    count_rooms = models.IntegerField(default=1, validators=[MaxValueValidator(10), MinValueValidator(1)])
+    count_rooms = models.IntegerField(default=1,
+                                      choices=CHOICES,
+                                      null=True,
+                                      blank=True)
     from_price = models.DecimalField(max_digits=8, decimal_places=2,
                                      validators=[MinValueValidator(0)],
                                      null=True,
@@ -87,3 +101,30 @@ class SearchModel(models.Model):
     #                              blank=True
     #                              )
     location = models.CharField(max_length=100, null=True, blank=True)
+
+
+# coment u-n
+class CommentModel(models.Model):
+    Author = models.ForeignKey(Users, on_delete=models.CASCADE)
+    CreatedDate = models.DateTimeField(auto_now_add=True)
+    ModifiedDate = models.DateTimeField(auto_now=True, editable=False)
+    CommentText = models.CharField(max_length=150)
+    Post = models.ForeignKey(HomeModel, on_delete=models.CASCADE)
+    Parent = models.ForeignKey(
+        "self",
+        on_delete=models.CASCADE,
+        null=True, blank=True,
+        related_name="replies")
+
+    class Meta:
+        ordering = ("CreatedDate",)
+
+    def __str__(self):
+        return f'{self.Author.username} - {self.CommentText[:10]} >> {self.Parent}'
+
+    def children(self):
+        return CommentModel.objects.filter(Parent=self)
+
+    @property
+    def any_children(self):
+        return CommentModel.objects.filter(Parent=self).exists()

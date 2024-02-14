@@ -31,10 +31,15 @@ class HomeModelSearchView(generics.ListAPIView):
                 Q(home_type__name__icontains=serializer.validated_data['home_type'])
             )
 
-            if 'count_rooms' in serializer.validated_data:
-                queryset = queryset.filter(
-                    Q(count_rooms__icontains=serializer.validated_data['count_rooms'])
-                )
+            rooms = serializer.validated_data['count_rooms']
+            if rooms is not None:
+                if rooms == 6:
+                    queryset = queryset.filter(count_rooms__gte=rooms
+                                               )
+                else:
+                    queryset = queryset.filter(
+                        Q(count_rooms__icontains=rooms)
+                    )
 
             if 'location' in serializer.validated_data:
                 queryset = queryset.filter(
@@ -68,25 +73,18 @@ class HomeModelSearchView(generics.ListAPIView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        search_terms = self.request.query_params.getlist('search')
+        search_terms = self.request.query_params.getlist('q')
 
         if search_terms:
-            # price_search_terms = [term for term in search_terms if '-' in term]
-            # other_search_terms = [term for term in search_terms if '-' not in term]
-            #
-            # if price_search_terms:
-            #     for price_term in price_search_terms:
-            #         price_threshold = float(price_term.replace('-', ''))
-            #         queryset = queryset.filter(price__lt=price_threshold)
-
             queryset = queryset.filter(
                 reduce(operator.and_, (
                     Q(name__icontains=term) |
+                    Q(count_rooms__icontains=term) |
+                    Q(location__icontains=term) |
                     Q(price__icontains=term) |
                     Q(description__icontains=term) |
                     Q(type__name__icontains=term) |
-                    Q(home_type__name__icontains=term) |
-                    Q(location__name__icontains=term)
+                    Q(home_type__name__icontains=term)
                     for term in search_terms
                 ))
             )
@@ -108,6 +106,9 @@ class HomeViewALL(generics.RetrieveUpdateDestroyAPIView):
 class PictureView(generics.ListCreateAPIView):
     queryset = PictureModel.objects.all()
     serializer_class = PictureSerializer
+
+    def get_queryset(self):
+        return PictureModel.objects.filter(home__owner=self.request.user)
 
 
 class PictureViewALL(generics.RetrieveUpdateDestroyAPIView):
@@ -138,3 +139,13 @@ class HomeTypeViewALL(generics.RetrieveUpdateDestroyAPIView):
     queryset = HomeTypeModel.objects.all()
     serializer_class = HomeTypeSerializer
     permission_classes = [IsAdminOrReadOnly]
+
+
+# coment u-n
+class CommentListAPIView(generics.ListCreateAPIView):
+    queryset = CommentModel.objects.all()
+    serializer_class = CommentListSerializers
+
+    def get_queryset(self):
+        queryset = CommentModel.objects.filter(Parent=None)
+        return queryset
