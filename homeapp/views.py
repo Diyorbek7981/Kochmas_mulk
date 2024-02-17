@@ -3,9 +3,10 @@ from django.shortcuts import render
 from rest_framework import generics, permissions
 from .models import *
 from .serializesrs import *
-from .permissions import IsAdminOrReadOnly, IsOwnerOrReadOnly
+from .permissions import *
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.views import APIView
 # search uchun
 from functools import reduce
 import operator
@@ -103,9 +104,17 @@ class HomeViewALL(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOwnerOrReadOnly]
 
 
-class PictureView(generics.ListCreateAPIView):
+class PictureView(generics.ListAPIView):
     queryset = PictureModel.objects.all()
     serializer_class = PictureSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = PictureSerializer(data=request.data)
+
+        if serializer.is_valid():  # and serializer.home.owner == request.user:
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get_queryset(self):
         return PictureModel.objects.filter(home__owner=self.request.user)
@@ -141,7 +150,7 @@ class HomeTypeViewALL(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAdminOrReadOnly]
 
 
-# coment u-n
+# coment u-n -------------------------------->
 class CommentListAPIView(generics.ListCreateAPIView):
     queryset = CommentModel.objects.all()
     serializer_class = CommentListSerializers
@@ -149,3 +158,43 @@ class CommentListAPIView(generics.ListCreateAPIView):
     def get_queryset(self):
         queryset = CommentModel.objects.filter(Parent=None)
         return queryset
+
+
+# auth u-n ----------------------------------------->
+class CreateUserView(generics.CreateAPIView):
+    queryset = Users.objects.all()
+    serializer_class = SignUpSerializer
+    permission_classes = [permissions.AllowAny]  # hechqanday imkoniyatlarni cheklamaslik u-n
+
+
+class VerifyAPIView(APIView):
+
+    def post(self, request, *args, **kwargs):
+        user = self.request.user  # user ->
+        code = self.request.data.get('code')  # 4083
+
+        self.check_verify(user, code)
+        return Response(
+            data={
+                "success": True,
+                "auth_status": user.auth_status,
+                "access": user.token()['access'],
+                "refresh": user.token()['refresh_token']
+            }
+        )
+
+    @staticmethod
+    def check_verify(user, code):  # 12:03 -> 12:05 => expiration_time=12:05   12:04
+        verifies = user.verify_codes.filter(expiration_time__gte=datetime.now(), code=code, is_confirmed=False)
+        print(verifies)
+        if not verifies.exists():
+            data = {
+                "message": "Tasdiqlash kodingiz xato yoki eskirgan"
+            }
+            raise ValidationError(data)
+        else:
+            verifies.update(is_confirmed=True)
+        if user.auth_status == NEW:
+            user.auth_status = CODE_VERIFIED
+            user.save()
+        return True
