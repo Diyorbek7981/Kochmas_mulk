@@ -5,17 +5,21 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.exceptions import ValidationError
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
 
 
 # Create your views here.
 
-# auth u-n ----------------------------------------->
+# Email yoki phoneni aniqlab kode jo'natadi ------------------------------------------------------------------>
 class CreateUserView(generics.CreateAPIView):
     queryset = Users.objects.all()
     serializer_class = SignUpSerializer
     permission_classes = [permissions.AllowAny]  # hechqanday imkoniyatlarni cheklamaslik u-n
 
 
+# Codni Tekshirish --------------------------------------------------------------------------------------->
 class VerifyAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -33,7 +37,7 @@ class VerifyAPIView(APIView):
             }
         )
 
-    # tasdiqlash kodini togri va yaroqliligini tekshiradi------------>
+    # tasdiqlash kodini togri va yaroqliligini tekshiradi----------------------------------->
     @staticmethod
     def check_verify(user, code):  # 12:03 -> 12:05 => expiration_time=12:05   12:04
         verifies = user.verify_codes.filter(expiration_time__gte=datetime.now(), code=code, is_confirmed=False)
@@ -52,7 +56,7 @@ class VerifyAPIView(APIView):
         return True
 
 
-# tasdiqlash kodini qayta olish uchun -------------->
+# tasdiqlash kodini qayta olish uchun ----------------------------------------------------------------------------->
 class GetNewVerification(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -89,6 +93,7 @@ class GetNewVerification(APIView):
             raise ValidationError(data)
 
 
+# Userni Registratsiya qilish (malumotlarini update qilish)------------------------------------------------------->
 class ChangeUserInfoView(generics.UpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ChangeUserSerializer
@@ -117,7 +122,7 @@ class ChangeUserInfoView(generics.UpdateAPIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
-# Rasm update qilish uchun
+# Rasm update qilish uchun----------------------------------------------------------->
 class ChangeUserPhotoView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -131,3 +136,36 @@ class ChangeUserPhotoView(APIView):
             }, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# Login uchun-------------------------------------------------------------------------->
+
+class LoginView(TokenObtainPairView):
+    # login qilayotgan userda hech qanday token bolmaydi shuning uchun TokenObtainPairView dan foydalanamiz
+    serializer_class = LoginSerializer
+
+
+# Refresh token (Acses tokeni yangilaydi) ------------------------------------------------------------>
+class LoginRefreshView(TokenRefreshView):
+    serializer_class = LoginRefreshSerializer
+
+
+# Userni Logout qilish uchun---------------------------------------------------------------------->
+class LogOutView(APIView):
+    serializer_class = LogoutSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):  # post metotda refresh tokenni olib olamiz
+        serializer = self.serializer_class(data=self.request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            refresh_token = self.request.data['refresh']
+            token = RefreshToken(refresh_token)
+            token.blacklist()  # tokendan boshqa foydalanmaslik uchun uni blacklistga kiritamiz
+            data = {
+                'success': True,
+                'message': "Siz muvoffaqyatli logout qildingiz"
+            }
+            return Response(data, status=status.HTTP_205_RESET_CONTENT)
+        except TokenError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)

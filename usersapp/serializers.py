@@ -1,8 +1,13 @@
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
+from rest_framework_simplejwt.tokens import AccessToken
+from django.contrib.auth.models import update_last_login
+from rest_framework.generics import get_object_or_404
 from .models import *
-from rest_framework.exceptions import ValidationError
-from .utility import send_email, send_phone_code, check_email_or_phone
+from rest_framework.exceptions import ValidationError, PermissionDenied, NotFound
+from .utility import send_email, send_phone_code, check_email_or_phone, check_user_type
+from django.contrib.auth import authenticate
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -45,7 +50,6 @@ class SignUpSerializer(serializers.ModelSerializer):
     # kiritilgan malumotni email yoki phone ekanligini tekshiradi --------------------->
     @staticmethod
     def auth_validate(data):
-        print(data)
         user_input = str(data.get('email_phone_number')).lower()
         input_type = check_email_or_phone(user_input)  # email or phone
         if input_type == "email":
@@ -168,7 +172,7 @@ class ChangeUserPhotoSerializer(serializers.Serializer):
     def update(self, instance, validated_data):
         photo = validated_data.get('photo')
 
-        if photo and instance.auth_status == DONE or photo and instance.auth_status == PHOTO_DONE:  # rasm borligini va statusi tekshiriladi
+        if photo and instance.auth_status in [DONE, PHOTO_DONE]:  # rasm borligini va statusi tekshiriladi
             instance.photo = photo
             instance.auth_status = PHOTO_DONE
             instance.save()
@@ -180,3 +184,100 @@ class ChangeUserPhotoSerializer(serializers.Serializer):
             raise ValidationError(data)
 
         return instance
+
+
+# Login qilish ucun --------------------------------------------------------------->
+class LoginSerializer(TokenObtainPairSerializer):
+
+    def __init__(self, request=None, *args, **kwargs):
+        super(LoginSerializer, self).__init__(*args, **kwargs)
+        self.fields['userinput'] = serializers.CharField(required=True)
+        self.fields['username'] = serializers.CharField(required=False, read_only=True)
+
+    # check_user_type orqali malumotni aniqlab olamiz va inputni user_inputga o'zlashtiramiz --------------->
+    def auth_validate(self, data):
+        user_input = data.get('userinput')  # username email yoki telefon raqam bilan kirish mumkun
+        if check_user_type(user_input) == 'username':
+            username = user_input
+
+        elif check_user_type(user_input) == 'email':
+            user = self.get_user(
+                email__iexact=user_input)  # user get_user method orqali user o'zgartiruvchiga biriktirildi
+            # email__iexact bu email boshqacharoq kiritilgadaham uni qabul qiladi  Anora@gmail.com   -> anOra@gmail.com
+            username = user.username
+
+        elif check_user_type(user_input) == 'phone':
+            user = self.get_user(phone_number=user_input)
+            username = user.username
+
+        else:
+            data = {
+                'success': False,
+                'message': "Siz email, username yoki telefon raqami jonatishingiz kerak"
+            }
+            raise ValidationError(data)
+
+        authentication_kwargs = {
+            self.username_field: username,
+            'password': data['password']  # kiritilgan username va pasvordni olish u-n
+        }
+
+        # user statusi tekshiriladi --------------------------------------------->
+        current_user = Users.objects.filter(
+            username__iexact=username).first()  # noto'g'ri username kiritilsa filter None qiymat qaytaradi
+
+        if current_user is not None and current_user.auth_status in [NEW, CODE_VERIFIED]:
+            raise ValidationError(
+                {
+                    'success': False,
+                    'message': "Siz royhatdan toliq otmagansiz!"
+                }
+            )
+
+        user = authenticate(**authentication_kwargs)
+        if user is not None:
+            self.user = user
+        else:
+            raise ValidationError(
+                {
+                    'success': False,
+                    'message': "Kiritilgan parol yoki username xato. Tekshirib qayta urinib koring "
+                }
+            )
+
+    def validate(self, data):  # userni inputini va statusini tekshirib malumotga data qaytaradi
+        self.auth_validate(data)
+        if self.user.auth_status not in [DONE]:
+            raise PermissionDenied("Siz login qila olmaysiz. Ruxsatingiz yoq")
+        data = self.user.token()
+        data['auth_status'] = self.user.auth_status
+        data['full_name'] = self.user.full_name
+        return data
+
+    # userni aniqlab olib uni auth_validatega yuboramiz----------->
+    def get_user(self, **kwargs):
+        users = Users.objects.filter(**kwargs)
+        if not users.exists():
+            raise ValidationError(
+                {
+                    "message": "Active accaunt topilmadi"
+                }
+            )
+        return users.first()
+
+
+# Mobil va Frontent dasturchilar uchun kerak (Acses tokeni yangilab beradi (hali muddati bor bo'lsaham))  ------------------------------------------------------->
+class LoginRefreshSerializer(TokenRefreshSerializer):
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        access_token_instance = AccessToken(data['access'])
+        user_id = access_token_instance['user_id']
+        user = get_object_or_404(Users, id=user_id)
+        update_last_login(None, user)
+        return data
+
+
+# Userni Logout qilish uchun ---------------------------------------------------------------------------------->
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
