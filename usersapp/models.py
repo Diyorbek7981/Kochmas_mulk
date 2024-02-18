@@ -41,9 +41,14 @@ class Users(AbstractUser, BaseModel):
         (PHOTO_DONE, PHOTO_DONE)
     )
 
-    user_roles = models.CharField(max_length=31, choices=USER_ROLES, default=ORDINARY_USER)
-    auth_type = models.CharField(max_length=31, choices=AUTH_TYPE_CHOICES)
-    auth_status = models.CharField(max_length=31, choices=AUTH_STATUS, default=NEW)
+    user_roles = models.CharField(max_length=31,
+                                  choices=USER_ROLES,
+                                  default=ORDINARY_USER)
+    auth_type = models.CharField(max_length=31,
+                                 choices=AUTH_TYPE_CHOICES)
+    auth_status = models.CharField(max_length=31,
+                                   choices=AUTH_STATUS,
+                                   default=NEW)  # signup jarayonini birin-ketin bo'lishi uchun
     email = models.EmailField(null=True, blank=True, unique=True)
     phone_number = models.CharField(max_length=13, null=True, blank=True, unique=True)
     photo = models.ImageField(upload_to='user_photos/', null=True, blank=True,

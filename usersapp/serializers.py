@@ -1,3 +1,4 @@
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from .models import *
 from rest_framework.exceptions import ValidationError
@@ -92,3 +93,60 @@ class SignUpSerializer(serializers.ModelSerializer):
         data.update(instance.token())
 
         return data
+
+
+# Bazaga saqlangan tasodifiy username va paswordni ozgartirish ----------------------------->
+class ChangeUserSerializer(serializers.Serializer):  # serializers.Serializer va serializers.ModelSerializer da farq bor
+    first_name = serializers.CharField(write_only=True, required=True)
+    # write_only - ushbu satrni bazaga kiritish uchun read_only - faqat oqish uchun (bazaga saqlanmaydi)
+    last_name = serializers.CharField(write_only=True, required=True)
+    username = serializers.CharField(write_only=True, required=True)
+    password = serializers.CharField(write_only=True, required=True)
+    confirm_password = serializers.CharField(write_only=True, required=True)
+
+    def validate(self, data):
+        password = data.get('password', None)
+        confirm_password = data.get('confirm_password', None)
+
+        if password != confirm_password:  # parol va tasdiqlash parolni tekshiradi
+            data = {
+                "message": "Parol va tasdiqlash parolingiz birxil emas"
+            }
+            raise ValidationError(data)
+
+        if password:
+            validate_password(password)  # passwordni validatsiyadan o'tkazadi (bu tayyor metod)
+            validate_password(confirm_password)
+
+        return data
+
+    def validate_username(self, username):  # usernamega validatsiya berish
+        if len(username) < 5 or len(username) > 30:
+            data = {
+                "message": "Usernameda minimum 5 ta maxsimum 30 ta belgi bo'lishi kerak"
+            }
+            raise ValidationError(data)
+
+        if username.isdigit():
+            data = {
+                "message": "User name raqmlardan tashkil topmasligi kerak"
+            }
+            raise ValidationError(data)
+        return username
+
+    def update(self, instance, validated_data):
+
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        # *** bu userni kiritgan first nameni oladi agar u bolmasa instance orqali malumotlar bazasidagini oladi
+        instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.password = validated_data.get('password', instance.password)
+        instance.username = validated_data.get('username', instance.username)
+
+        if validated_data.get('password'):
+            instance.set_password(validated_data.get('password'))
+            # parol kiritilgan bolsa set_password orqali heshlab beradi
+        if instance.auth_status == CODE_VERIFIED:  # userni statusini ozgartiradi
+            instance.auth_status = DONE
+
+        instance.save()
+        return instance
