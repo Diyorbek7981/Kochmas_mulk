@@ -8,6 +8,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
+from django.core.exceptions import ObjectDoesNotExist
+from .utility import send_email, send_phone_code, check_email_or_phone
 
 
 # Create your views here.
@@ -122,7 +124,7 @@ class ChangeUserInfoView(generics.UpdateAPIView):
         return Response(data, status=status.HTTP_200_OK)
 
 
-# Rasm update qilish uchun----------------------------------------------------------->
+# Rasm update qilish uchun------------------------------------------------------------------------------>
 class ChangeUserPhotoView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -138,7 +140,7 @@ class ChangeUserPhotoView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# Login uchun-------------------------------------------------------------------------->
+# Login uchun----------------------------------------------------------------------------------------->
 
 class LoginView(TokenObtainPairView):
     # login qilayotgan userda hech qanday token bolmaydi shuning uchun TokenObtainPairView dan foydalanamiz
@@ -169,3 +171,63 @@ class LogOutView(APIView):
             return Response(data, status=status.HTTP_205_RESET_CONTENT)
         except TokenError:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+# Qayta parolni update qilish uchun olish uchun telefon raqam yoki emailga cod yuboradi ------------------------------>
+class ForgotPasswordView(APIView):
+    permission_classes = [permissions.AllowAny, ]  # Login qilmagan userlarham foydalana olishi uchun
+    serializer_class = ForgotPasswordSerializer
+
+    # Kiritilgan malumotni email yoki telefon ekanligini tekshirib qayta cod jo'natadi------------->
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=self.request.data)
+        serializer.is_valid(raise_exception=True)
+        email_or_phone = serializer.validated_data.get(
+            'email_or_phone')  # email va phoneni validatsiasi(serializerdagi)
+        user = serializer.validated_data.get('user')  # usernameni validatsiyasi (serializerdagi)
+
+        if check_email_or_phone(email_or_phone) == 'phone':
+            code = user.create_verify_code(VIA_PHONE)
+            send_phone_code(email_or_phone, code)
+
+        elif check_email_or_phone(email_or_phone) == 'email':
+            code = user.create_verify_code(VIA_EMAIL)
+            send_email(email_or_phone, code)
+
+        return Response(
+            {
+                "success": True,
+                'message': "Tasdiqlash kodi muvaffaqiyatli yuborildi",
+                "access": user.token()['access'],
+                "refresh": user.token()['refresh_token'],
+                "user_status": user.auth_status,
+            }, status=status.HTTP_200_OK
+        )
+
+
+# Esdan chiqqan parolni o'zgartirish uchun --------------------------------------------------------------------------->
+class ResetPasswordView(generics.UpdateAPIView):
+    serializer_class = ResetPasswordSerializer
+    permission_classes = [permissions.IsAuthenticated, ]
+    http_method_names = ['patch', 'put']
+
+    def get_object(self):
+        return self.request.user
+
+    def update(self, request, *args, **kwargs):
+        response = super(ResetPasswordView, self).update(request, *args, **kwargs)
+
+        try:
+            user = Users.objects.get(id=response.data.get('id'))
+
+        except ObjectDoesNotExist as e:
+            raise NotFound(detail='User topilmadi')
+
+        return Response(
+            {
+                'success': True,
+                'message': "Parolingiz muvaffaqiyatli o'zgartirildi",
+                'access': user.token()['access'],
+                'refresh': user.token()['refresh_token'],
+            }
+        )

@@ -4,6 +4,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, Toke
 from rest_framework_simplejwt.tokens import AccessToken
 from django.contrib.auth.models import update_last_login
 from rest_framework.generics import get_object_or_404
+from django.db.models import Q
 from .models import *
 from rest_framework.exceptions import ValidationError, PermissionDenied, NotFound
 from .utility import send_email, send_phone_code, check_email_or_phone, check_user_type
@@ -281,3 +282,71 @@ class LoginRefreshSerializer(TokenRefreshSerializer):
 # Userni Logout qilish uchun ---------------------------------------------------------------------------------->
 class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
+
+
+# Qayta code olish uchun email yoki telefon kiritiladi------------------------------------------------------>
+class ForgotPasswordSerializer(serializers.Serializer):
+    email_or_phone = serializers.CharField(write_only=True, required=True)
+
+    def validate(self, attrs):  # Kiritilgan malumotni tekshiradi (email yoki telefoni)
+        email_or_phone = attrs.get('email_or_phone', None)
+        if email_or_phone is None:
+            raise ValidationError(
+                {
+                    "success": False,
+                    'message': "Email yoki telefon raqami kiritilishi shart!"
+                }
+            )
+        user = Users.objects.filter(
+            Q(phone_number=email_or_phone) |
+            Q(email=email_or_phone))  # userni email yoki telefon raqami orqali topadi
+        if not user.exists():
+            raise NotFound(detail="User topilmadi")
+        attrs['user'] = user.first()
+        return attrs
+
+
+# Parolni qayta qo'yish uchun ----------------------------------------------------------------------------->
+class ResetPasswordSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)
+    password = serializers.CharField(min_length=8, required=True, write_only=True)
+    confirm_password = serializers.CharField(min_length=8, required=True, write_only=True)
+
+    class Meta:
+        model = Users
+        fields = (
+            'id',
+            'password',
+            'confirm_password'
+        )
+
+    def validate(self, data):
+        password = data.get('password', None)
+        confirm_password = data.get('password', None)
+
+        if password != confirm_password:  # kiritilgan parollarni lekshirish uchun
+            raise ValidationError(
+                {
+                    'success': False,
+                    'message': "Parollaringiz qiymati bir-biriga teng emas"
+                }
+            )
+
+        # if request.user.auth_status in [DONE]:
+        #     raise ValidationError(
+        #         {
+        #             'success': False,
+        #             'message': "Kodni tasdiqladingizmi?"
+        #         }
+        #     )
+
+        if password:
+            validate_password(password)
+        return data
+
+    def update(self, instance, validated_data):  # parolni yangilash uchun
+        password = validated_data.pop('password')
+        # Usul kalit bilan bog'liq qiymatni ajratib olish va uni lug'atdan olib tashlash popuchun ishlatiladi.-
+        # - Bu parolni keyingi qayta ishlashda tasodifan oshkor qilinmasligini ta'minlaydi
+        instance.set_password(password)
+        return super(ResetPasswordSerializer, self).update(instance, validated_data)

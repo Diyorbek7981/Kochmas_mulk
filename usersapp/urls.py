@@ -11,4 +11,6 @@ urlpatterns = [
     path('new_verify/', GetNewVerification.as_view()),
     path('change_user/', ChangeUserInfoView.as_view()),
     path('change_photo/', ChangeUserPhotoView.as_view()),
+    path('forgot_pass/', ForgotPasswordView.as_view()),
+    path('reset_pass/', ResetPasswordView.as_view()),
 ]
