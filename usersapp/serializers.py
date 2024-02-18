@@ -145,8 +145,38 @@ class ChangeUserSerializer(serializers.Serializer):  # serializers.Serializer va
         if validated_data.get('password'):
             instance.set_password(validated_data.get('password'))
             # parol kiritilgan bolsa set_password orqali heshlab beradi
-        if instance.auth_status == CODE_VERIFIED:  # userni statusini ozgartiradi
+
+        if instance.auth_status == NEW:  # userni statusini tekshiramiz
+            data = {
+                "message": "Siz hali verifikatsiadan o'tmagansiz"
+            }
+            raise ValidationError(data)
+
+        elif instance.auth_status == CODE_VERIFIED:  # user statusini o'zgartiradi
             instance.auth_status = DONE
 
         instance.save()
+        return instance
+
+
+# Rasm yuklash uchun ----------------------------------------------------------->
+class ChangeUserPhotoSerializer(serializers.Serializer):
+    photo = serializers.ImageField(validators=[FileExtensionValidator(allowed_extensions=[
+        'jpg', 'jpeg', 'png', 'heic', 'heif'
+    ])])
+
+    def update(self, instance, validated_data):
+        photo = validated_data.get('photo')
+
+        if photo and instance.auth_status == DONE or photo and instance.auth_status == PHOTO_DONE:  # rasm borligini va statusi tekshiriladi
+            instance.photo = photo
+            instance.auth_status = PHOTO_DONE
+            instance.save()
+
+        else:
+            data = {
+                "message": "Siz hali o'zingiz haqingizdagi malumotlarni kiritmadingiz "
+            }
+            raise ValidationError(data)
+
         return instance

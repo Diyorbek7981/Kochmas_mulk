@@ -199,4 +199,4 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_frameish_simplejvt.serializatorlar.TokenRefreshSlidingSerializer",
 }
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Emilga boradigan verifikatsiya codini konsolga yuboradi (emailga jo'natish u-n obuna sotib olish kerak)

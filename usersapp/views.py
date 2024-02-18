@@ -115,3 +115,19 @@ class ChangeUserInfoView(generics.UpdateAPIView):
             "auth_status": self.request.user.auth_status,
         },
         return Response(data, status=status.HTTP_200_OK)
+
+
+# Rasm update qilish uchun
+class ChangeUserPhotoView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def put(self, request, *args, **kwargs):
+        serializer = ChangeUserPhotoSerializer(data=request.data)
+        if serializer.is_valid():
+            user = request.user
+            serializer.update(user, serializer.validated_data)
+            return Response({
+                "message": "Rasm muvoffaqyatli o'zgartirildi"
+            }, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

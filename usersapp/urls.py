@@ -7,4 +7,5 @@ urlpatterns = [
     path('verify/', VerifyAPIView.as_view()),
     path('new_verify/', GetNewVerification.as_view()),
     path('change_user/', ChangeUserInfoView.as_view()),
+    path('change_photo/', ChangeUserPhotoView.as_view()),
 ]
