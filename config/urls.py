@@ -25,14 +25,15 @@ schema_view = get_schema_view(
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('homeapp.urls')),
+    path('', include('usersapp.urls')),
     #     swager u-n
     re_path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     re_path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     re_path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     #     auth u-n
-    path('auth-drf', include('rest_framework.urls')),  # new
-    re_path(r'^auth/', include('djoser.urls')),  # new
-    re_path(r'^auth/', include('djoser.urls.authtoken')),  # new
+    # path('auth-drf', include('rest_framework.urls')),  # new
+    # re_path(r'^auth/', include('djoser.urls')),  # new
+    # re_path(r'^auth/', include('djoser.urls.authtoken')),  # new
 ]
 # translate u-n
 urlpatterns = [

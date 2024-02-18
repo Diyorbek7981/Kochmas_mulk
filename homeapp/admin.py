@@ -42,17 +42,7 @@ class HomeTypeModelAdmin(TranslationAdmin, TaskAdmin):
     list_display_links = ['name']
 
 
-@admin.register(Users)
-class UserAdmin(admin.ModelAdmin):
-    list_display = ['username']
-
-
 @admin.register(CommentModel)
 class CommentModelAdmin(admin.ModelAdmin):
     list_display = ['Post']
     list_display_links = ['Post']
-
-
-@admin.register(UserConfirmation)
-class UserConfirmationAdmin(admin.ModelAdmin):
-    list_display = ['id']

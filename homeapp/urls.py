@@ -13,8 +13,4 @@ urlpatterns = [
     path('api/v1/search/', HomeModelSearchView.as_view()),
     # coment u-n
     path("list/", CommentListAPIView.as_view()),
-    # signup u-n
-    path('signup/', CreateUserView.as_view()),
-    path('verify/', VerifyAPIView.as_view()),
-
 ]

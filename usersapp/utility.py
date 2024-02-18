@@ -7,20 +7,7 @@ from django.template.loader import render_to_string
 from rest_framework.exceptions import ValidationError
 from twilio.rest import Client
 
-from django.db import models
-import uuid
-
-
-# email yoki telefon raqamiga tekshiradi
-
-
-class BaseModel(models.Model):
-    id = models.UUIDField(unique=True, default=uuid.uuid4, editable=False, primary_key=True)
-    created_time = models.DateTimeField(auto_now_add=True)
-    updated_time = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        abstract = True
+# email yoki telefon raqamiga tekshiradi ------------------------>
 
 
 email_regex = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b")
@@ -29,11 +16,10 @@ username_regex = re.compile(r"^[a-zA-Z0-9_.-]+$")
 
 
 def check_email_or_phone(email_or_phone):
-    phone_number = phonenumbers.parse(email_or_phone)
     if re.fullmatch(email_regex, email_or_phone):
         email_or_phone = "email"
 
-    elif phonenumbers.is_valid_number(phone_number):
+    elif phonenumbers.is_valid_number(phonenumbers.parse(email_or_phone)):
         email_or_phone = 'phone'
 
     else:
@@ -45,6 +31,8 @@ def check_email_or_phone(email_or_phone):
 
     return email_or_phone
 
+
+# email username va telefon raqamini regex orqali tekshiradi---------------------->
 
 def check_user_type(user_input):
     phone_number = phonenumbers.parse(user_input)
@@ -104,7 +92,7 @@ def send_email(email, code):
 
 # --------------------------------------------------------------------------------
 
-# twilioda telefon raqamiga code yuborish
+# twilioda telefon raqamiga code yuborish ------------------------------------------->
 
 # TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
 # TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
@@ -112,7 +100,7 @@ def send_email(email, code):
 
 def send_phone_code(phone, code):
     account_sid = 'ACc547f4fe1c23442720e6f08c9d89d3ea'
-    auth_token = '4829d3672f292af74f5e7b13800056c8'
+    auth_token = '35d0cff78d3c7434514fa0035d428569'
     client = Client(account_sid, auth_token)
     client.messages.create(
         body=f"Salom do'stim! Sizning tasdiqlash kodingiz: {code}\n",
