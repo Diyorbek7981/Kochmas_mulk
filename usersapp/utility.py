@@ -103,12 +103,12 @@ def send_email(email, code):
 
 
 def send_phone_code(phone, code):
-    account_sid = 'ACc547f4fe1c23442720e6f08c9d89d3ea'
-    auth_token = '35d0cff78d3c7434514fa0035d428569'
+    account_sid = 'ACbae95c64bd9b84b2e95d841d7a611f3c'
+    auth_token = '5a3feef232217b6fc45e60640a5a4321'
     client = Client(account_sid, auth_token)
     client.messages.create(
         body=f"Salom do'stim! Sizning tasdiqlash kodingiz: {code}\n",
-        from_="+12484407978",  # twiliodagi raqam
+        from_="+15612993508",  # twiliodagi raqam
         to=f"{phone}"
     )
 

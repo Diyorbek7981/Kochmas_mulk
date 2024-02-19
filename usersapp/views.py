@@ -43,7 +43,7 @@ class VerifyAPIView(APIView):
     @staticmethod
     def check_verify(user, code):  # 12:03 -> 12:05 => expiration_time=12:05   12:04
         verifies = user.verify_codes.filter(expiration_time__gte=datetime.now(), code=code, is_confirmed=False)
-        print(verifies)
+
         if not verifies.exists():
             data = {
                 "message": "Tasdiqlash kodingiz xato yoki eskirgan"
@@ -81,7 +81,10 @@ class GetNewVerification(APIView):
         return Response(
             {
                 "success": True,
-                "message": "Tasdiqlash kodingiz qaytadan yuborildi"
+                "message": "Tasdiqlash kodingiz qaytadan yuborildi",
+                "auth_status": user.auth_status,
+                "access": user.token()['access'],
+                "refresh": user.token()['refresh_token']
             }
         )
 

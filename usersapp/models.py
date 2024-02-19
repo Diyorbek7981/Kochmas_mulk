@@ -116,7 +116,7 @@ class Users(AbstractUser, BaseModel):
         self.hashing_password()
 
 
-PHONE_EXPIRE = 5
+PHONE_EXPIRE = 2
 EMAIL_EXPIRE = 5
 
 

@@ -100,7 +100,7 @@ class SignUpSerializer(serializers.ModelSerializer):
         return data
 
 
-# Bazaga saqlangan tasodifiy username va paswordni ozgartirish ----------------------------->
+# Bazaga saqlangan tasodifiy username va paswordni ozgartirish ------------------------------------------------------->
 class ChangeUserSerializer(serializers.Serializer):  # serializers.Serializer va serializers.ModelSerializer da farq bor
     first_name = serializers.CharField(write_only=True, required=True)
     # write_only - ushbu satrni bazaga kiritish uchun read_only - faqat oqish uchun (bazaga saqlanmaydi)
@@ -151,20 +151,14 @@ class ChangeUserSerializer(serializers.Serializer):  # serializers.Serializer va
             instance.set_password(validated_data.get('password'))
             # parol kiritilgan bolsa set_password orqali heshlab beradi
 
-        if instance.auth_status == NEW:  # userni statusini tekshiramiz
-            data = {
-                "message": "Siz hali verifikatsiadan o'tmagansiz"
-            }
-            raise ValidationError(data)
-
-        elif instance.auth_status == CODE_VERIFIED:  # user statusini o'zgartiradi
+        if instance.auth_status == CODE_VERIFIED:  # user statusini o'zgartiradi
             instance.auth_status = DONE
 
         instance.save()
         return instance
 
 
-# Rasm yuklash uchun ----------------------------------------------------------->
+# Rasm yuklash uchun ------------------------------------------------------------------------------------------------>
 class ChangeUserPhotoSerializer(serializers.Serializer):
     photo = serializers.ImageField(validators=[FileExtensionValidator(allowed_extensions=[
         'jpg', 'jpeg', 'png', 'heic', 'heif'
@@ -248,7 +242,7 @@ class LoginSerializer(TokenObtainPairSerializer):
 
     def validate(self, data):  # userni inputini va statusini tekshirib malumotga data qaytaradi
         self.auth_validate(data)
-        if self.user.auth_status not in [DONE]:
+        if self.user.auth_status not in [DONE, PHOTO_DONE]:
             raise PermissionDenied("Siz login qila olmaysiz. Ruxsatingiz yoq")
         data = self.user.token()
         data['auth_status'] = self.user.auth_status
@@ -324,21 +318,13 @@ class ResetPasswordSerializer(serializers.ModelSerializer):
         password = data.get('password', None)
         confirm_password = data.get('password', None)
 
-        if password != confirm_password:  # kiritilgan parollarni lekshirish uchun
+        if password != confirm_password:  # kiritilgan parollarni Tekshirish uchun
             raise ValidationError(
                 {
                     'success': False,
                     'message': "Parollaringiz qiymati bir-biriga teng emas"
                 }
             )
-
-        # if request.user.auth_status in [DONE]:
-        #     raise ValidationError(
-        #         {
-        #             'success': False,
-        #             'message': "Kodni tasdiqladingizmi?"
-        #         }
-        #     )
 
         if password:
             validate_password(password)

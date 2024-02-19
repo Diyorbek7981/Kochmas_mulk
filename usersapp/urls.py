@@ -1,5 +1,6 @@
 from django.urls import path
-from .views import *
+from .views import LoginView, LogOutView, LoginRefreshView, CreateUserView, VerifyAPIView, GetNewVerification, \
+    ChangeUserInfoView, ChangeUserPhotoView, ForgotPasswordView, ResetPasswordView
 
 urlpatterns = [
     # signup u-n
