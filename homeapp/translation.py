@@ -4,7 +4,7 @@ from modeltranslation.translator import TranslationOptions, register
 
 @register(HomeModel)
 class HomeModelTranslation(TranslationOptions):
-    fields = ('name', 'description')
+    fields = ('description',)
 
 
 @register(TypeModel)

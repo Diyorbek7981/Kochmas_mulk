@@ -129,6 +129,8 @@ class UserConfirmation(BaseModel):
     code = models.CharField(max_length=4)
     verify_type = models.CharField(max_length=31, choices=TYPE_CHOICES)
     user = models.ForeignKey(Users, models.CASCADE, related_name='verify_codes')
+    # related_name berishning sababi shu nomga murojat qilsak userga tegishli barcha codlarni olish uchun -
+    # - yani user = verify_codesni barcha codlariga
     expiration_time = models.DateTimeField(null=True)
     is_confirmed = models.BooleanField(default=False)
 

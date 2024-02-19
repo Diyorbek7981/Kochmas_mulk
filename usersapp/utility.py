@@ -104,7 +104,7 @@ def send_email(email, code):
 
 def send_phone_code(phone, code):
     account_sid = 'ACbae95c64bd9b84b2e95d841d7a611f3c'
-    auth_token = '5a3feef232217b6fc45e60640a5a4321'
+    auth_token = '271c543a8d72c74734d1b48455fd390e'
     client = Client(account_sid, auth_token)
     client.messages.create(
         body=f"Salom do'stim! Sizning tasdiqlash kodingiz: {code}\n",

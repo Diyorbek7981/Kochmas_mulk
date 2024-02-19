@@ -1,12 +1,14 @@
 from rest_framework import permissions
+from usersapp.models import ADMIN, MANAGER
+from rest_framework.exceptions import ValidationError
 
 
-class IsAdminOrReadOnly(permissions.BasePermission):
+class IsAdminOrManangerOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        return bool(request.user.is_staff)
+        return bool(request.user.user_roles == ADMIN or request.user.user_roles == MANAGER)
 
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
@@ -14,4 +16,13 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        return bool(obj.owner == request.user or request.user.is_staff)
+        return bool(obj.owner == request.user or request.user.user_roles == ADMIN or request.user.user_roles == MANAGER)
+
+
+class IsOwnerOrReadOnlyPicture(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        return bool(
+            obj.home.owner == request.user or request.user.user_roles == ADMIN or request.user.user_roles == MANAGER)

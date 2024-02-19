@@ -20,8 +20,8 @@ class TaskAdmin():
 
 @admin.register(HomeModel)
 class HomeModelAdmin(TranslationAdmin, TaskAdmin):
-    list_display = ['name', 'description']
-    list_display_links = ['name', 'description']
+    list_display = ['type', 'home_type', 'description']
+    list_display_links = ['type', 'home_type', 'description']
 
 
 @admin.register(PictureModel)
@@ -42,7 +42,12 @@ class HomeTypeModelAdmin(TranslationAdmin, TaskAdmin):
     list_display_links = ['name']
 
 
-@admin.register(CommentModel)
-class CommentModelAdmin(admin.ModelAdmin):
-    list_display = ['Post']
-    list_display_links = ['Post']
+@admin.register(ComforsTypeModel)
+class ComforsTypeModelAdmin(admin.ModelAdmin):
+    list_display = ['name']
+    list_display_links = ['name']
+
+# @admin.register(CommentModel)
+# class CommentModelAdmin(admin.ModelAdmin):
+#     list_display = ['Post']
+#     list_display_links = ['Post']

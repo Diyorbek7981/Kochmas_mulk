@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 # search uchun
 from functools import reduce
 import operator
+from rest_framework.exceptions import ValidationError
 
 
 # Create your views here.
@@ -32,6 +33,11 @@ class HomeModelSearchView(generics.ListAPIView):
                 Q(home_type__name__icontains=serializer.validated_data['home_type'])
             )
 
+            if 'location' in serializer.validated_data:
+                queryset = queryset.filter(
+                    Q(location__icontains=serializer.validated_data['location'])
+                )
+
             rooms = serializer.validated_data['count_rooms']
             if rooms is not None:
                 if rooms == 6:
@@ -42,9 +48,41 @@ class HomeModelSearchView(generics.ListAPIView):
                         Q(count_rooms__icontains=rooms)
                     )
 
-            if 'location' in serializer.validated_data:
+            if 'from_area' and 'up_area' in serializer.validated_data:
+                area = serializer.validated_data['from_area']
+                area1 = serializer.validated_data['up_area']
+
+                if area is not None and area1 is not None:
+                    area = min(area, area1)
+                    area1 = max(area, area1)
+
+                    queryset = queryset.filter(
+                        Q(area__gte=area, area__lte=area1))
+
+                queryset = queryset.all()
+
+            floor = serializer.validated_data['floor']
+            if floor is not None:
                 queryset = queryset.filter(
-                    Q(location__icontains=serializer.validated_data['location'])
+                    Q(floor__icontains=floor)
+                )
+
+            building_floor = serializer.validated_data['building_floor']
+            if building_floor is not None:
+                queryset = queryset.filter(
+                    Q(building_floor__icontains=building_floor)
+                )
+
+            repair = serializer.validated_data['repair']
+            if repair is not None:
+                queryset = queryset.filter(
+                    Q(repair__icontains=repair)
+                )
+
+            building_material = serializer.validated_data['building_material']
+            if building_material is not None:
+                queryset = queryset.filter(
+                    Q(building_material__icontains=building_material)
                 )
 
             if 'from_price' and 'up_to_price' in serializer.validated_data:
@@ -96,6 +134,7 @@ class HomeModelSearchView(generics.ListAPIView):
 class HomeView(generics.ListCreateAPIView):
     queryset = HomeModel.objects.all()
     serializer_class = HomeSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 
 class HomeViewALL(generics.RetrieveUpdateDestroyAPIView):
@@ -104,17 +143,10 @@ class HomeViewALL(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOwnerOrReadOnly]
 
 
-class PictureView(generics.ListAPIView):
+class PictureView(generics.ListCreateAPIView):
     queryset = PictureModel.objects.all()
     serializer_class = PictureSerializer
-
-    def post(self, request, *args, **kwargs):
-        serializer = PictureSerializer(data=request.data)
-
-        if serializer.is_valid():  # and serializer.home.owner == request.user:
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         return PictureModel.objects.filter(home__owner=self.request.user)
@@ -123,40 +155,36 @@ class PictureView(generics.ListAPIView):
 class PictureViewALL(generics.RetrieveUpdateDestroyAPIView):
     queryset = PictureModel.objects.all()
     serializer_class = PictureSerializer
-    permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [IsOwnerOrReadOnlyPicture]
 
-
-class TypeView(generics.ListCreateAPIView):
-    queryset = TypeModel.objects.all()
-    serializer_class = TypeSerializer
-    permission_classes = [IsAdminOrReadOnly]
-
-
-class TypeViewALL(generics.RetrieveUpdateDestroyAPIView):
-    queryset = TypeModel.objects.all()
-    serializer_class = TypeSerializer
-    permission_classes = [IsAdminOrReadOnly]
-
-
-class HomeTypeView(generics.ListCreateAPIView):
-    queryset = HomeTypeModel.objects.all()
-    serializer_class = HomeTypeSerializer
-    permission_classes = [IsAdminOrReadOnly]
-
-
-class HomeTypeViewALL(generics.RetrieveUpdateDestroyAPIView):
-    queryset = HomeTypeModel.objects.all()
-    serializer_class = HomeTypeSerializer
-    permission_classes = [IsAdminOrReadOnly]
-
+# class TypeView(generics.ListCreateAPIView):
+#     queryset = TypeModel.objects.all()
+#     serializer_class = TypeSerializer
+#     permission_classes = [IsAdminOrReadOnly]
+#
+#
+# class TypeViewALL(generics.RetrieveUpdateDestroyAPIView):
+#     queryset = TypeModel.objects.all()
+#     serializer_class = TypeSerializer
+#     permission_classes = [IsAdminOrReadOnly]
+#
+#
+# class HomeTypeView(generics.ListCreateAPIView):
+#     queryset = HomeTypeModel.objects.all()
+#     serializer_class = HomeTypeSerializer
+#     permission_classes = [IsAdminOrReadOnly]
+#
+#
+# class HomeTypeViewALL(generics.RetrieveUpdateDestroyAPIView):
+#     queryset = HomeTypeModel.objects.all()
+#     serializer_class = HomeTypeSerializer
+#     permission_classes = [IsAdminOrReadOnly]
 
 # coment u-n -------------------------------->
-class CommentListAPIView(generics.ListCreateAPIView):
-    queryset = CommentModel.objects.all()
-    serializer_class = CommentListSerializers
-
-    def get_queryset(self):
-        queryset = CommentModel.objects.filter(Parent=None)
-        return queryset
-
-
+# class CommentListAPIView(generics.ListCreateAPIView):
+#     queryset = CommentModel.objects.all()
+#     serializer_class = CommentListSerializers
+#
+#     def get_queryset(self):
+#         queryset = CommentModel.objects.filter(Parent=None)
+#         return queryset

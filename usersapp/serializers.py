@@ -37,6 +37,7 @@ class SignUpSerializer(serializers.ModelSerializer):
         if user.auth_type == VIA_EMAIL:
             code = user.create_verify_code(VIA_EMAIL)
             send_email(user.email, code)
+
         elif user.auth_type == VIA_PHONE:
             code = user.create_verify_code(VIA_PHONE)
             send_phone_code(user.phone_number, code)

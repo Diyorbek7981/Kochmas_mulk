@@ -2,7 +2,34 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 from usersapp.models import Users
+from django.core.validators import FileExtensionValidator
 
+CHOICES = (
+    (1, '1 xona'),
+    (2, '2 xona'),
+    (3, '3 xona'),
+    (4, '4 xona'),
+    (5, '5 xona'),
+    (6, '6 va undan ortiq xonalar'),
+    (7, 'Studiya'),
+    (8, 'Ochiq plan'),
+)
+
+REPAIR_CHOICES = (
+    ('Avtorlik loyhasi', 'Avtorlik loyhasi'),
+    ('Evroremont', 'Evroremont'),
+    ('O`rta', 'O`rta'),
+    ('Tamir talab', 'Tamir talab'),
+    ('Oddiy suvoq', 'Oddiy suvoq')
+)
+
+Building_Material = (
+    ('G`isht', 'G`isht'),
+    ('Monolit', 'Monolit'),
+    ('Panel', 'Panel'),
+    ('Bloklar', 'Bloklar'),
+    ('Boshqa', 'Boshqa')
+)
 
 
 class TypeModel(models.Model):
@@ -23,18 +50,49 @@ class HomeTypeModel(models.Model):
         return self.name
 
 
+class ComforsTypeModel(models.Model):
+    name = models.CharField(max_length=50)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+
+# class RepairTypeModel(models.Model):
+#     name = models.CharField(max_length=50)
+#     created = models.DateTimeField(auto_now_add=True)
+#     updated = models.DateTimeField(auto_now=True)
+#
+#     def __str__(self):
+#         return self.name
+
+
 class HomeModel(models.Model):
-    name = models.CharField(max_length=150)
     type = models.ForeignKey(TypeModel, on_delete=models.CASCADE)
     home_type = models.ForeignKey(HomeTypeModel, on_delete=models.CASCADE)
-    count_rooms = models.IntegerField(default=0,
-                                      validators=[MaxValueValidator(10), MinValueValidator(0)])
-    # vip = models.BooleanField(default=False)
-    description = models.TextField()
+    location = models.CharField(max_length=100)
+    count_rooms = models.IntegerField(default=1,
+                                      choices=CHOICES)
+    vip = models.BooleanField(default=False)
+    area = models.DecimalField(max_digits=5,
+                               decimal_places=2,
+                               validators=[MinValueValidator(0)])
+    floor = models.IntegerField(null=True,
+                                blank=True,
+                                validators=[MinValueValidator(0)])
+    building_floor = models.IntegerField(null=True,
+                                         blank=True,
+                                         validators=[MinValueValidator(0)])
+    repair = models.CharField(max_length=100,
+                              choices=REPAIR_CHOICES)
+    building_material = models.CharField(max_length=100,
+                                         choices=Building_Material)
     price = models.DecimalField(max_digits=8,
                                 decimal_places=2,
                                 validators=[MinValueValidator(0)])
-    location = models.CharField(max_length=100)
+    description = models.TextField()
+    comforts = models.ManyToManyField(ComforsTypeModel)
     owner = models.ForeignKey(Users, on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -45,40 +103,55 @@ class HomeModel(models.Model):
         ordering = ['-created']
 
     def __str__(self):
-        return self.name
+        return f"{self.type} - {self.home_type} - {self.owner}"
 
 
 class PictureModel(models.Model):
-    pic = models.ImageField(upload_to='home/')
+    pic = models.ImageField(upload_to='home/', null=True, blank=True,
+                            validators=[
+                                FileExtensionValidator(allowed_extensions=[
+                                    'jpg', 'jpeg', 'png', 'heic', 'heif'
+                                ])])
     home = models.ForeignKey(HomeModel, on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.home.name
+        return f"{self.home.type} - {self.home.home_type} - {self.home.owner}"
 
 
 # CHOICES = (
 #     (1, 'Up'),
 #     (0, 'Down'),
 # )
-CHOICES = (
-    (1, '1 xona'),
-    (2, '2 xona'),
-    (3, '3 xona'),
-    (4, '4 xona'),
-    (5, '5 xona'),
-    (6, '6 va undan ortiq xonalar'),
-)
 
 
 class SearchModel(models.Model):
     type = models.ForeignKey(TypeModel, on_delete=models.CASCADE)
     home_type = models.ForeignKey(HomeTypeModel, on_delete=models.CASCADE)
+    location = models.CharField(max_length=100, null=True, blank=True)
     count_rooms = models.IntegerField(default=1,
                                       choices=CHOICES,
                                       null=True,
                                       blank=True)
+    from_area = models.IntegerField(
+                                    validators=[MinValueValidator(0)],
+                                    null=True, blank=True)
+    up_area = models.IntegerField(
+                                  validators=[MinValueValidator(0)],
+                                  null=True, blank=True)
+    floor = models.IntegerField(null=True,
+                                blank=True,
+                                validators=[MinValueValidator(0)])
+    building_floor = models.IntegerField(null=True,
+                                         blank=True,
+                                         validators=[MinValueValidator(0)])
+    repair = models.CharField(max_length=100,
+                              choices=REPAIR_CHOICES,
+                              null=True, blank=True)
+    building_material = models.CharField(max_length=100,
+                                         choices=Building_Material,
+                                         null=True, blank=True)
     from_price = models.DecimalField(max_digits=8, decimal_places=2,
                                      validators=[MinValueValidator(0)],
                                      null=True,
@@ -92,31 +165,29 @@ class SearchModel(models.Model):
     #                              null=True,
     #                              blank=True
     #                              )
-    location = models.CharField(max_length=100, null=True, blank=True)
 
-
-# coment u-n
-class CommentModel(models.Model):
-    Author = models.ForeignKey(Users, on_delete=models.CASCADE)
-    CreatedDate = models.DateTimeField(auto_now_add=True)
-    ModifiedDate = models.DateTimeField(auto_now=True, editable=False)
-    CommentText = models.CharField(max_length=150)
-    Post = models.ForeignKey(HomeModel, on_delete=models.CASCADE)
-    Parent = models.ForeignKey(
-        "self",
-        on_delete=models.CASCADE,
-        null=True, blank=True,
-        related_name="replies")
-
-    class Meta:
-        ordering = ("CreatedDate",)
-
-    def __str__(self):
-        return f'{self.Author.username} - {self.CommentText[:10]} >> {self.Parent}'
-
-    def children(self):
-        return CommentModel.objects.filter(Parent=self)
-
-    @property
-    def any_children(self):
-        return CommentModel.objects.filter(Parent=self).exists()
+# coment u-n ----------------->
+# class CommentModel(models.Model):
+#     Author = models.ForeignKey(Users, on_delete=models.CASCADE)
+#     CreatedDate = models.DateTimeField(auto_now_add=True)
+#     ModifiedDate = models.DateTimeField(auto_now=True, editable=False)
+#     CommentText = models.CharField(max_length=150)
+#     Post = models.ForeignKey(HomeModel, on_delete=models.CASCADE)
+#     Parent = models.ForeignKey(
+#         "self",
+#         on_delete=models.CASCADE,
+#         null=True, blank=True,
+#         related_name="replies")
+#
+#     class Meta:
+#         ordering = ("CreatedDate",)
+#
+#     def __str__(self):
+#         return f'{self.Author.username} - {self.CommentText[:10]} >> {self.Parent}'
+#
+#     def children(self):
+#         return CommentModel.objects.filter(Parent=self)
+#
+#     @property
+#     def any_children(self):
+#         return CommentModel.objects.filter(Parent=self).exists()
