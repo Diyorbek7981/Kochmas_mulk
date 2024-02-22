@@ -13,12 +13,29 @@ class SearchSerializer(ModelSerializer):
 class HomeSerializer(ModelSerializer):
     owner = serializers.HiddenField(
         default=serializers.CurrentUserDefault())  # user mizni yashirib unga aktiv bo'lgan foydalanuvchini o'rnatish uchun
+    author = serializers.ReadOnlyField(
+        source='owner.username')  # avtor maydoni yaratib unga userni qiymatini beramiz get requestda ko'rib turish uchun
+
+    me_like = serializers.SerializerMethodField('get_me_liked')  # like bosgan yoki yoqligini ko'rish uchun
 
     class Meta:
         model = HomeModel
-        fields = ['type', 'home_type', 'location', 'count_rooms', 'area', 'floor', 'building_floor', 'repair',
-                  'building_material', 'price', 'description', 'comforts', 'owner', 'created',
-                  'updated']
+        fields = ['id', 'type', 'home_type', 'location', 'count_rooms', 'area', 'floor', 'building_floor', 'repair',
+                  'building_material', 'price', 'description', 'comforts', 'author', 'owner', 'created',
+                  'updated', 'me_like']
+
+    def get_me_liked(self, obj):
+        # Request berayotgan user saytda ro'yhatdan o'tgan bolsa homeni likelarini ko'radi
+        # va un shu userga tegishlimi yoki yo'qmi tekshiradi (true yoki false qaytaradi)
+        request = self.context.get('request', None)
+        if request and request.user.is_authenticated:
+            try:
+                like = HomeLike.objects.get(home=obj, author=request.user)
+                return True
+            except HomeLike.DoesNotExist:
+                return False
+
+        return False
 
 
 class PictureSerializer(ModelSerializer):
@@ -42,22 +59,25 @@ class HomeTypeSerializer(ModelSerializer):
         model = HomeTypeModel
         fields = ['name', 'created', 'updated']
 
-# coment u-n ---------------------------->
-# class CommentListSerializers(ModelSerializer):
-#     Replies = serializers.SerializerMethodField()
-#     Author = serializers.HiddenField(
-#         default=serializers.CurrentUserDefault())
-#
-#     # Author = serializers.ReadOnlyField(
-#     #     source='Author.username')
-#
-#     def get_Replies(self, obj):
-#         if obj.any_children:
-#             return CommentListSerializers(obj.children(), many=True).data
-#
-#     # def get_Author(self, obj):
-#     #     return obj.Author.username
-#
-#     class Meta:
-#         model = CommentModel
-#         fields = ("Author", "CreatedDate", "ModifiedDate", "Post", "Parent", "CommentText", "Replies")
+
+class ConforTypeSerializer(ModelSerializer):
+    class Meta:
+        model = ComforsTypeModel
+        fields = ['name', 'created', 'updated']
+
+
+class UserSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)
+
+    class Meta:
+        model = Users
+        fields = ('id', 'username', 'photo')
+
+
+class HomeLikeSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)
+    author = UserSerializer(read_only=True)
+
+    class Meta:
+        model = HomeLike
+        fields = ("id", "author", "home")

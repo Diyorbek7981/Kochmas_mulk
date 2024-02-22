@@ -8,7 +8,7 @@ class IsAdminOrManangerOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        return bool(request.user.user_roles == ADMIN or request.user.user_roles == MANAGER)
+        return bool(request.user.user_roles == ADMIN or request.user.is_superuser)
 
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
@@ -16,7 +16,7 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
-        return bool(obj.owner == request.user or request.user.user_roles == ADMIN or request.user.user_roles == MANAGER)
+        return bool(obj.owner == request.user or request.user.user_roles == ADMIN or request.user.is_superuser)
 
 
 class IsOwnerOrReadOnlyPicture(permissions.BasePermission):
@@ -25,4 +25,4 @@ class IsOwnerOrReadOnlyPicture(permissions.BasePermission):
             return True
 
         return bool(
-            obj.home.owner == request.user or request.user.user_roles == ADMIN or request.user.user_roles == MANAGER)
+            obj.home.owner == request.user or request.user.user_roles == ADMIN or request.user.is_superuser)

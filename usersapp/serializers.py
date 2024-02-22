@@ -155,6 +155,12 @@ class ChangeUserSerializer(serializers.Serializer):  # serializers.Serializer va
         if instance.auth_status == CODE_VERIFIED:  # user statusini o'zgartiradi
             instance.auth_status = DONE
 
+        else:
+            data = {
+                "message": "Siz hali kodni tasdiqlamadingiz"
+            }
+            raise ValidationError(data)
+
         instance.save()
         return instance
 
@@ -175,7 +181,7 @@ class ChangeUserPhotoSerializer(serializers.Serializer):
 
         else:
             data = {
-                "message": "Siz hali o'zingiz haqingizdagi malumotlarni kiritmadingiz "
+                "message": "Siz hali o'zingiz haqingizdagi malumotlarni kiritmadingiz"
             }
             raise ValidationError(data)
 
@@ -295,6 +301,7 @@ class ForgotPasswordSerializer(serializers.Serializer):
         user = Users.objects.filter(
             Q(phone_number=email_or_phone) |
             Q(email=email_or_phone))  # userni email yoki telefon raqami orqali topadi
+
         if not user.exists():
             raise NotFound(detail="User topilmadi")
         attrs['user'] = user.first()
@@ -331,7 +338,32 @@ class ResetPasswordSerializer(serializers.ModelSerializer):
             validate_password(password)
         return data
 
+        if instance.auth_status == CODE_VERIFIED:  # user statusini o'zgartiradi
+            instance.auth_status = DONE
+
+        else:
+            data = {
+                "message": "Siz hali kodni tasdiqlamadingiz"
+            }
+            raise ValidationError(data)
+
+        instance.save()
+        return instance
+
     def update(self, instance, validated_data):  # parolni yangilash uchun
+
+        if instance.auth_status == CODE_VERIFIED:  # user statusini o'zgartiradi
+            instance.auth_status = DONE
+
+        else:
+            data = {
+                "message": "Siz hali kodni tasdiqlamadingiz"
+            }
+            raise ValidationError(data)
+
+        instance.save()
+        return instance
+
         password = validated_data.pop('password')
         # Usul kalit bilan bog'liq qiymatni ajratib olish va uni lug'atdan olib tashlash popuchun ishlatiladi.-
         # - Bu parolni keyingi qayta ishlashda tasodifan oshkor qilinmasligini ta'minlaydi

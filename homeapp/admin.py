@@ -43,11 +43,12 @@ class HomeTypeModelAdmin(TranslationAdmin, TaskAdmin):
 
 
 @admin.register(ComforsTypeModel)
-class ComforsTypeModelAdmin(admin.ModelAdmin):
+class ComforsTypeModelAdmin(TranslationAdmin, TaskAdmin):
     list_display = ['name']
     list_display_links = ['name']
 
-# @admin.register(CommentModel)
-# class CommentModelAdmin(admin.ModelAdmin):
-#     list_display = ['Post']
-#     list_display_links = ['Post']
+
+@admin.register(HomeLike)
+class HomeLikeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'author', 'home')
+    list_display_links = ('id', 'author', 'home')

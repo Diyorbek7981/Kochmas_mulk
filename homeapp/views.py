@@ -1,5 +1,4 @@
 from django.db.models import Q
-from django.shortcuts import render
 from rest_framework import generics, permissions
 from .models import *
 from .serializesrs import *
@@ -10,15 +9,15 @@ from rest_framework.views import APIView
 # search uchun
 from functools import reduce
 import operator
-from rest_framework.exceptions import ValidationError
+from .pagination import CustomPageNumberPagination
 
 
 # Create your views here.
 
 class HomeModelSearchView(generics.ListAPIView):
     queryset = HomeModel.objects.all()
-
     serializer_class = SearchSerializer
+    pagination_class = CustomPageNumberPagination
 
     def post(self, request, format=None):
         serializer = SearchSerializer(data=request.data)
@@ -116,37 +115,72 @@ class HomeModelSearchView(generics.ListAPIView):
 
         if search_terms:
             queryset = queryset.filter(
+                # Bu fildlarni searchda ?q=dom&q=arenda&q=toshkent&q=5&q=34 ko'rinishida yozish mumkun
+                # lekn yozilgan fildlardan bittasi boshqa obyejtlarda ham bo'lsa uni ham chiqaradi
                 reduce(operator.and_, (
-                    Q(name__icontains=term) |
-                    Q(count_rooms__icontains=term) |
+                    Q(type__name__icontains=term) |
+                    Q(home_type__name__icontains=term) |
                     Q(location__icontains=term) |
+                    Q(count_rooms__icontains=term) |
+                    Q(area__icontains=term) |
+                    Q(floor__icontains=term) |
+                    Q(building_floor__icontains=term) |
+                    Q(repair__icontains=term) |
+                    Q(building_material__icontains=term) |
                     Q(price__icontains=term) |
                     Q(description__icontains=term) |
-                    Q(type__name__icontains=term) |
-                    Q(home_type__name__icontains=term)
+                    Q(comforts__name__icontains=term)
                     for term in search_terms
                 ))
             )
-
-        return queryset
+            return queryset
 
 
 class HomeView(generics.ListCreateAPIView):
     queryset = HomeModel.objects.all()
     serializer_class = HomeSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = CustomPageNumberPagination
 
 
 class HomeViewALL(generics.RetrieveUpdateDestroyAPIView):
     queryset = HomeModel.objects.all()
     serializer_class = HomeSerializer
     permission_classes = [IsOwnerOrReadOnly]
+    pagination_class = CustomPageNumberPagination
+
+    # def put(self, request, *args, **kwargs):
+    #     home = self.get_object()
+    #     serializer = self.serializer_class(home, data=request.data)
+    #     serializer.is_valid(raise_exception=True)
+    #     serializer.save()
+    #
+    #     return Response(
+    #         {
+    #             "success": True,
+    #             "code": status.HTTP_200_OK,
+    #             "message": "Post successfully updated",
+    #             "data": serializer.data
+    #         }
+    #     )
+    #
+    # def delete(self, request, *args, **kwargs):
+    #     home = self.get_object()
+    #     home.delete()
+    #     return Response(
+    #         {
+    #             "success": True,
+    #             "code": status.HTTP_204_NO_CONTENT,
+    #             "message": "Post successfully delete",
+    #         }
+    #     )
 
 
 class PictureView(generics.ListCreateAPIView):
     queryset = PictureModel.objects.all()
     serializer_class = PictureSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = CustomPageNumberPagination
 
     def get_queryset(self):
         return PictureModel.objects.filter(home__owner=self.request.user)
@@ -157,34 +191,68 @@ class PictureViewALL(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = PictureSerializer
     permission_classes = [IsOwnerOrReadOnlyPicture]
 
-# class TypeView(generics.ListCreateAPIView):
-#     queryset = TypeModel.objects.all()
-#     serializer_class = TypeSerializer
-#     permission_classes = [IsAdminOrReadOnly]
-#
-#
-# class TypeViewALL(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = TypeModel.objects.all()
-#     serializer_class = TypeSerializer
-#     permission_classes = [IsAdminOrReadOnly]
-#
-#
-# class HomeTypeView(generics.ListCreateAPIView):
-#     queryset = HomeTypeModel.objects.all()
-#     serializer_class = HomeTypeSerializer
-#     permission_classes = [IsAdminOrReadOnly]
-#
-#
-# class HomeTypeViewALL(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = HomeTypeModel.objects.all()
-#     serializer_class = HomeTypeSerializer
-#     permission_classes = [IsAdminOrReadOnly]
 
-# coment u-n -------------------------------->
-# class CommentListAPIView(generics.ListCreateAPIView):
-#     queryset = CommentModel.objects.all()
-#     serializer_class = CommentListSerializers
-#
-#     def get_queryset(self):
-#         queryset = CommentModel.objects.filter(Parent=None)
-#         return queryset
+class TypeView(generics.ListCreateAPIView):
+    queryset = TypeModel.objects.all()
+    serializer_class = TypeSerializer
+    permission_classes = [IsAdminOrManangerOrReadOnly]
+    pagination_class = CustomPageNumberPagination
+
+
+class TypeViewALL(generics.RetrieveUpdateDestroyAPIView):
+    queryset = TypeModel.objects.all()
+    serializer_class = TypeSerializer
+    permission_classes = [IsAdminOrManangerOrReadOnly]
+
+
+class HomeTypeView(generics.ListCreateAPIView):
+    queryset = HomeTypeModel.objects.all()
+    serializer_class = HomeTypeSerializer
+    permission_classes = [IsAdminOrManangerOrReadOnly]
+    pagination_class = CustomPageNumberPagination
+
+
+class HomeTypeViewALL(generics.RetrieveUpdateDestroyAPIView):
+    queryset = HomeTypeModel.objects.all()
+    serializer_class = HomeTypeSerializer
+    permission_classes = [IsAdminOrManangerOrReadOnly]
+
+
+class HomeLikeListView(generics.ListAPIView):
+    serializer_class = HomeLikeSerializer
+    permission_classes = [permissions.AllowAny, ]
+
+    # request berayotgan userga tegishli like modellari korinadi
+    def get_queryset(self):
+        return HomeLike.objects.filter(author=self.request.user)
+
+
+class HomeLikeApiView(APIView):
+
+    # homeni pk orqali shu modelga like ni sqlash va o'chirish
+    def post(self, request, pk):
+        # avval try bajariladi va request erayotgan user va shu pkli home model bazada bo'lsa olinib o'chiladi
+        try:
+            home_like = HomeLike.objects.get(
+                author=self.request.user,
+                home_id=pk
+            )
+            home_like.delete()
+            data = {
+                "success": True,
+                "message": "LIKE muvaffaqiyatli o'chirildi"
+            }
+            return Response(data, status=status.HTTP_204_NO_CONTENT)
+        # agar bazada unday malumot bo'lmasa xudi shu malumot yaratiladi
+        except HomeLike.DoesNotExist:
+            home_like = HomeLike.objects.create(
+                author=self.request.user,
+                home_id=pk
+            )
+            serializer = HomeLikeSerializer(home_like)
+            data = {
+                "success": True,
+                "message": "Postga LIKE muvaffaqiyatli qo'shildi",
+                "data": serializer.data
+            }
+            return Response(data, status=status.HTTP_201_CREATED)

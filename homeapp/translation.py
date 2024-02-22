@@ -15,3 +15,8 @@ class TypeTranslation(TranslationOptions):
 @register(HomeTypeModel)
 class HomeTypeTranslation(TranslationOptions):
     fields = ('name',)
+
+
+@register(ComforsTypeModel)
+class ComformTranslation(TranslationOptions):
+    fields = ('name',)

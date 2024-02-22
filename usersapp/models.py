@@ -21,13 +21,12 @@ class BaseModel(models.Model):
 # Create your models here.
 ORDINARY_USER, MANAGER, ADMIN = ("ordinary_user", 'manager', 'admin')
 VIA_EMAIL, VIA_PHONE = ("via_email", "via_phone")
-NEW, CODE_VERIFIED, DONE, PHOTO_DONE = ('new', 'code_verified', 'done', 'photo_done')
+NEW, CODE_VERIFIED, DONE, PHOTO_DONE, FORGET_PASS = ('new', 'code_verified', 'done', 'photo_done', 'forget_password')
 
 
 class Users(AbstractUser, BaseModel):
     USER_ROLES = (
         (ORDINARY_USER, ORDINARY_USER),
-        (MANAGER, MANAGER),
         (ADMIN, ADMIN)
     )
     AUTH_TYPE_CHOICES = (
@@ -38,7 +37,8 @@ class Users(AbstractUser, BaseModel):
         (NEW, NEW),
         (CODE_VERIFIED, CODE_VERIFIED),
         (DONE, DONE),
-        (PHOTO_DONE, PHOTO_DONE)
+        (PHOTO_DONE, PHOTO_DONE),
+        (FORGET_PASS, FORGET_PASS)
     )
 
     user_roles = models.CharField(max_length=31,

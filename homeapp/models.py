@@ -1,7 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, MaxLengthValidator
 from usersapp.models import Users
+from django.db.models import UniqueConstraint
 from django.core.validators import FileExtensionValidator
 
 CHOICES = (
@@ -59,15 +60,6 @@ class ComforsTypeModel(models.Model):
         return self.name
 
 
-# class RepairTypeModel(models.Model):
-#     name = models.CharField(max_length=50)
-#     created = models.DateTimeField(auto_now_add=True)
-#     updated = models.DateTimeField(auto_now=True)
-#
-#     def __str__(self):
-#         return self.name
-
-
 class HomeModel(models.Model):
     type = models.ForeignKey(TypeModel, on_delete=models.CASCADE)
     home_type = models.ForeignKey(HomeTypeModel, on_delete=models.CASCADE)
@@ -91,8 +83,8 @@ class HomeModel(models.Model):
     price = models.DecimalField(max_digits=8,
                                 decimal_places=2,
                                 validators=[MinValueValidator(0)])
-    description = models.TextField()
-    comforts = models.ManyToManyField(ComforsTypeModel)
+    description = models.TextField(validators=[MaxLengthValidator(1000)])
+    comforts = models.ManyToManyField(ComforsTypeModel, null=True, blank=True)
     owner = models.ForeignKey(Users, on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
@@ -135,11 +127,11 @@ class SearchModel(models.Model):
                                       null=True,
                                       blank=True)
     from_area = models.IntegerField(
-                                    validators=[MinValueValidator(0)],
-                                    null=True, blank=True)
+        validators=[MinValueValidator(0)],
+        null=True, blank=True)
     up_area = models.IntegerField(
-                                  validators=[MinValueValidator(0)],
-                                  null=True, blank=True)
+        validators=[MinValueValidator(0)],
+        null=True, blank=True)
     floor = models.IntegerField(null=True,
                                 blank=True,
                                 validators=[MinValueValidator(0)])
@@ -166,28 +158,21 @@ class SearchModel(models.Model):
     #                              blank=True
     #                              )
 
-# coment u-n ----------------->
-# class CommentModel(models.Model):
-#     Author = models.ForeignKey(Users, on_delete=models.CASCADE)
-#     CreatedDate = models.DateTimeField(auto_now_add=True)
-#     ModifiedDate = models.DateTimeField(auto_now=True, editable=False)
-#     CommentText = models.CharField(max_length=150)
-#     Post = models.ForeignKey(HomeModel, on_delete=models.CASCADE)
-#     Parent = models.ForeignKey(
-#         "self",
-#         on_delete=models.CASCADE,
-#         null=True, blank=True,
-#         related_name="replies")
-#
-#     class Meta:
-#         ordering = ("CreatedDate",)
-#
-#     def __str__(self):
-#         return f'{self.Author.username} - {self.CommentText[:10]} >> {self.Parent}'
-#
-#     def children(self):
-#         return CommentModel.objects.filter(Parent=self)
-#
-#     @property
-#     def any_children(self):
-#         return CommentModel.objects.filter(Parent=self).exists()
+
+class HomeLike(models.Model):
+    author = models.ForeignKey(Users, on_delete=models.CASCADE)
+    home = models.ForeignKey(HomeModel, on_delete=models.CASCADE, related_name='likes')
+
+    # home.likes buyrugi berilsa shu homga tegishli barcha likelar keladi
+
+    class Meta:  # 1 ta modelga 1 user ko'p like bosmasligi uchun
+        constraints = [
+            UniqueConstraint(
+                fields=['author', 'home'],
+                # ko'rsatilgan author ko'rsatilgan postga 1 marta like bosadi (2 - sini qbulqilmaydi)
+                name='postLikeUnique'
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.author} -- {self.home}"

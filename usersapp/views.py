@@ -52,7 +52,8 @@ class VerifyAPIView(APIView):
         else:
             verifies.update(
                 is_confirmed=True)  # is_confirmed Truega ozgaradi (shu codni yana tasdiqlamoqchi bolsak check_verify ruhsat bermasligi u-n)
-        if user.auth_status == NEW:
+
+        if user.auth_status in [NEW, FORGET_PASS]:  # statusi o'zgartiriladi
             user.auth_status = CODE_VERIFIED
             user.save()
         return True
@@ -196,6 +197,9 @@ class ForgotPasswordView(APIView):
         elif check_email_or_phone(email_or_phone) == 'email':
             code = user.create_verify_code(VIA_EMAIL)
             send_email(email_or_phone, code)
+
+        user.auth_status = FORGET_PASS
+        user.save()
 
         return Response(
             {
