@@ -17,20 +17,24 @@ from .pagination import CustomPageNumberPagination
 class HomeModelSearchView(generics.ListAPIView):
     queryset = HomeModel.objects.all()
     serializer_class = SearchSerializer
-    pagination_class = CustomPageNumberPagination
 
     def post(self, request, format=None):
         serializer = SearchSerializer(data=request.data)
 
         if serializer.is_valid():
             queryset = HomeModel.objects.all()
-            queryset = queryset.filter(
-                Q(type__name__icontains=serializer.validated_data['type'])
-            )
 
-            queryset = queryset.filter(
-                Q(home_type__name__icontains=serializer.validated_data['home_type'])
-            )
+            type = serializer.validated_data['type']
+            if type is not None:
+                queryset = queryset.filter(
+                    Q(type__name__icontains=type)
+                )
+
+            home_type = serializer.validated_data['home_type']
+            if home_type is not None:
+                queryset = queryset.filter(
+                    Q(home_type__name__icontains=home_type)
+                )
 
             if 'location' in serializer.validated_data:
                 queryset = queryset.filter(
@@ -148,32 +152,7 @@ class HomeViewALL(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = HomeSerializer
     permission_classes = [IsOwnerOrReadOnly]
     pagination_class = CustomPageNumberPagination
-
-    # def put(self, request, *args, **kwargs):
-    #     home = self.get_object()
-    #     serializer = self.serializer_class(home, data=request.data)
-    #     serializer.is_valid(raise_exception=True)
-    #     serializer.save()
-    #
-    #     return Response(
-    #         {
-    #             "success": True,
-    #             "code": status.HTTP_200_OK,
-    #             "message": "Post successfully updated",
-    #             "data": serializer.data
-    #         }
-    #     )
-    #
-    # def delete(self, request, *args, **kwargs):
-    #     home = self.get_object()
-    #     home.delete()
-    #     return Response(
-    #         {
-    #             "success": True,
-    #             "code": status.HTTP_204_NO_CONTENT,
-    #             "message": "Post successfully delete",
-    #         }
-    #     )
+    http_method_names = ['patch', 'put', 'post', 'get']
 
 
 class PictureView(generics.ListCreateAPIView):

@@ -119,8 +119,8 @@ class PictureModel(models.Model):
 
 
 class SearchModel(models.Model):
-    type = models.ForeignKey(TypeModel, on_delete=models.CASCADE)
-    home_type = models.ForeignKey(HomeTypeModel, on_delete=models.CASCADE)
+    type = models.ForeignKey(TypeModel, on_delete=models.CASCADE, null=True, blank=True)
+    home_type = models.ForeignKey(HomeTypeModel, on_delete=models.CASCADE, null=True, blank=True)
     location = models.CharField(max_length=100, null=True, blank=True)
     count_rooms = models.IntegerField(default=1,
                                       choices=CHOICES,

@@ -9,11 +9,16 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
+import os
+from dotenv import dotenv_values  # dotenvdagi valularni olish uchun
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+ENV = dotenv_values(os.path.join(BASE_DIR, ".env"))  # .env papkani ulash
+
+TWILIO_ACCOUNT_SID = ENV.get('TWILIO_ACCOUNT_SID')  # .env papka ichidan olib beradi
+TWILIO_AUTH_TOKEN = ENV.get('TWILIO_AUTH_TOKEN')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/

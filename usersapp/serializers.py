@@ -34,11 +34,11 @@ class SignUpSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = super(SignUpSerializer, self).create(validated_data)
-        if user.auth_type == VIA_EMAIL:
-            code = user.create_verify_code(VIA_EMAIL)
-            send_email(user.email, code)
+        # if user.auth_type == VIA_EMAIL:
+        #     code = user.create_verify_code(VIA_EMAIL)
+        #     send_email(user.email, code)
 
-        elif user.auth_type == VIA_PHONE:
+        if user.auth_type == VIA_PHONE:
             code = user.create_verify_code(VIA_PHONE)
             send_phone_code(user.phone_number, code)
         user.save()
@@ -54,12 +54,12 @@ class SignUpSerializer(serializers.ModelSerializer):
     def auth_validate(data):
         user_input = str(data.get('email_phone_number')).lower()
         input_type = check_email_or_phone(user_input)  # email or phone
-        if input_type == "email":
-            data = {
-                "email": user_input,
-                "auth_type": VIA_EMAIL
-            }
-        elif input_type == "phone":
+        # if input_type == "email":
+        #     data = {
+        #         "email": user_input,
+        #         "auth_type": VIA_EMAIL
+        #     }
+        if input_type == "phone":
             data = {
                 "phone_number": user_input,
                 "auth_type": VIA_PHONE
@@ -67,7 +67,7 @@ class SignUpSerializer(serializers.ModelSerializer):
         else:
             data = {
                 'success': False,
-                'message': "You must send email or phone number"
+                'message': "You must send  phone number"
             }
             raise ValidationError(data)
 
@@ -140,6 +140,16 @@ class ChangeUserSerializer(serializers.Serializer):  # serializers.Serializer va
             raise ValidationError(data)
         return username
 
+    def validate_email_phone_number(self, value):  # user nameni uniklikka tekshiradi
+        if value and Users.objects.filter(username=value).exists():
+            data = {
+                "success": False,
+                "message": "Bu telefon raqami allaqachon ma'lumotlar bazasida bor"
+            }
+            raise ValidationError(data)
+
+        return value
+
     def update(self, instance, validated_data):
 
         instance.first_name = validated_data.get('first_name', instance.first_name)
@@ -157,7 +167,7 @@ class ChangeUserSerializer(serializers.Serializer):  # serializers.Serializer va
 
         else:
             data = {
-                "message": "Siz hali kodni tasdiqlamadingiz"
+                "message": "Siz tasdiqlash kodini kiritmadingiz "
             }
             raise ValidationError(data)
 
@@ -181,7 +191,7 @@ class ChangeUserPhotoSerializer(serializers.Serializer):
 
         else:
             data = {
-                "message": "Siz hali o'zingiz haqingizdagi malumotlarni kiritmadingiz"
+                "message": "Siz hali o'zingiz haqingizdagi malumotlarni kiritmadingiz "
             }
             raise ValidationError(data)
 
@@ -301,7 +311,6 @@ class ForgotPasswordSerializer(serializers.Serializer):
         user = Users.objects.filter(
             Q(phone_number=email_or_phone) |
             Q(email=email_or_phone))  # userni email yoki telefon raqami orqali topadi
-
         if not user.exists():
             raise NotFound(detail="User topilmadi")
         attrs['user'] = user.first()
@@ -338,34 +347,108 @@ class ResetPasswordSerializer(serializers.ModelSerializer):
             validate_password(password)
         return data
 
-        if instance.auth_status == CODE_VERIFIED:  # user statusini o'zgartiradi
-            instance.auth_status = DONE
-
-        else:
-            data = {
-                "message": "Siz hali kodni tasdiqlamadingiz"
-            }
-            raise ValidationError(data)
-
-        instance.save()
-        return instance
-
     def update(self, instance, validated_data):  # parolni yangilash uchun
-
-        if instance.auth_status == CODE_VERIFIED:  # user statusini o'zgartiradi
-            instance.auth_status = DONE
-
-        else:
-            data = {
-                "message": "Siz hali kodni tasdiqlamadingiz"
-            }
-            raise ValidationError(data)
-
-        instance.save()
-        return instance
-
         password = validated_data.pop('password')
+        instance.auth_status = DONE
         # Usul kalit bilan bog'liq qiymatni ajratib olish va uni lug'atdan olib tashlash popuchun ishlatiladi.-
         # - Bu parolni keyingi qayta ishlashda tasodifan oshkor qilinmasligini ta'minlaydi
         instance.set_password(password)
         return super(ResetPasswordSerializer, self).update(instance, validated_data)
+
+
+class UserCreatListSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)
+
+    class Meta:
+        model = Users
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'phone_number', 'password', 'photo',
+                  'auth_type',
+                  'auth_status', ]
+
+    def validate_username(self, username):
+        # usernamega validatsiya berish (validatsiada funksia nomi validate_(kiritmoqchi bolgan nom) ko'rinishida bo'ladi
+        if len(username) < 5 or len(username) > 30:
+            data = {
+                "message": "Usernameda minimum 5 ta maxsimum 30 ta belgi bo'lishi kerak"
+            }
+            raise ValidationError(data)
+
+        if username.isdigit():
+            data = {
+                "message": "User name raqmlardan tashkil topmasligi kerak"
+            }
+            raise ValidationError(data)
+        return username
+
+    def validate_phone_number(data, phone_number):
+        if phone_number is not None:
+            if not (len(phone_number) == 13 and phone_number.startswith("+998")):  # not shu shartlar bajarilmasn degani
+                data = {
+                    'success': False,
+                    'message': "You must send  phone number!!!"
+                }
+                raise ValidationError(data)
+
+
+class SuperUserUserCreatListSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)
+
+    class Meta:
+        model = Users
+        fields = '__all__'
+
+    def validate_username(self, username):
+        # usernamega validatsiya berish (validatsiada funksia nomi validate_(kiritmoqchi bolgan nom) ko'rinishida bo'ladi
+        if len(username) < 5 or len(username) > 30:
+            data = {
+                "message": "Usernameda minimum 5 ta maxsimum 30 ta belgi bo'lishi kerak"
+            }
+            raise ValidationError(data)
+
+        if username.isdigit():
+            data = {
+                "message": "User name raqmlardan tashkil topmasligi kerak"
+            }
+            raise ValidationError(data)
+        return username
+
+    def validate_phone_number(data, phone_number):
+        if phone_number is not None:
+            if not (len(phone_number) == 13 and phone_number.startswith("+998")):  # not shu shartlar bajarilmasn degani
+                data = {
+                    'success': False,
+                    'message': "You must send  phone number!!!"
+                }
+                raise ValidationError(data)
+
+
+class SuperUserUserCreatListSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)
+
+    class Meta:
+        model = Users
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'phone_number', 'password', 'photo']
+
+    def validate_username(self, username):
+        # usernamega validatsiya berish (validatsiada funksia nomi validate_(kiritmoqchi bolgan nom) ko'rinishida bo'ladi
+        if len(username) < 5 or len(username) > 30:
+            data = {
+                "message": "Usernameda minimum 5 ta maxsimum 30 ta belgi bo'lishi kerak"
+            }
+            raise ValidationError(data)
+
+        if username.isdigit():
+            data = {
+                "message": "User name raqmlardan tashkil topmasligi kerak"
+            }
+            raise ValidationError(data)
+        return username
+
+    def validate_phone_number(data, phone_number):
+        if phone_number is not None:
+            if not (len(phone_number) == 13 and phone_number.startswith("+998")):  # not shu shartlar bajarilmasn degani
+                data = {
+                    'success': False,
+                    'message': "You must send  phone number!!!"
+                }
+                raise ValidationError(data)

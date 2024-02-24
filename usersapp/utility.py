@@ -1,11 +1,11 @@
 import re
-import os
 import threading
 import phonenumbers
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from rest_framework.exceptions import ValidationError
 from twilio.rest import Client
+from django.conf import settings
 
 # email yoki telefon raqamiga tekshiradi ------------------------>
 
@@ -19,7 +19,7 @@ def check_email_or_phone(email_or_phone):
     if re.fullmatch(email_regex, email_or_phone):
         email_or_phone = "email"
 
-    elif phonenumbers.is_valid_number(phonenumbers.parse(email_or_phone)):
+    elif len(email_or_phone) == 13 and email_or_phone.startswith("+998"):
         email_or_phone = 'phone'
 
     else:
@@ -36,7 +36,6 @@ def check_email_or_phone(email_or_phone):
 
 #  Loginda kiritilgan inputni username email yoki phonega ajratib beradi
 def check_user_type(user_input):
-
     if re.fullmatch(email_regex, user_input):
         user_input = 'email'
 
@@ -98,13 +97,10 @@ def send_email(email, code):
 
 # twilioda telefon raqamiga code yuborish ------------------------------------------->
 
-# TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
-# TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
-
 
 def send_phone_code(phone, code):
-    account_sid = 'ACbae95c64bd9b84b2e95d841d7a611f3c'
-    auth_token = '271c543a8d72c74734d1b48455fd390e'
+    account_sid = settings.TWILIO_ACCOUNT_SID
+    auth_token = settings.TWILIO_AUTH_TOKEN
     client = Client(account_sid, auth_token)
     client.messages.create(
         body=f"Salom do'stim! Sizning tasdiqlash kodingiz: {code}\n",

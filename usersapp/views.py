@@ -10,6 +10,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from django.core.exceptions import ObjectDoesNotExist
 from .utility import send_email, send_phone_code, check_email_or_phone
+from homeapp.permissions import *
+from homeapp.pagination import *
 
 
 # Create your views here.
@@ -236,5 +238,56 @@ class ResetPasswordView(generics.UpdateAPIView):
                 'message': "Parolingiz muvaffaqiyatli o'zgartirildi",
                 'access': user.token()['access'],
                 'refresh': user.token()['refresh_token'],
+                'auth_status': user.auth_status
             }
         )
+
+
+class UserCreateListView(generics.ListCreateAPIView):
+    serializer_class = UserCreatListSerializer
+    permission_classes = [IsAdminOrManangerOrReadOnly]
+    pagination_class = CustomPageNumberPagination
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return Users.objects.all()
+        else:
+            return Users.objects.filter(is_superuser=False)
+
+
+class UserALLView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = UserCreatListSerializer
+    permission_classes = [IsAdminOrManangerOrReadOnly]
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return Users.objects.all()
+        else:
+            return Users.objects.filter(is_superuser=False)
+
+
+class SuperUserUserCreateListView(generics.ListCreateAPIView):
+    queryset = Users.objects.all()
+    serializer_class = UserCreatListSerializer
+    permission_classes = [ManangerOrReadOnly]
+    pagination_class = CustomPageNumberPagination
+
+
+class SuperUserUserALLView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Users.objects.all()
+    serializer_class = UserCreatListSerializer
+    permission_classes = [ManangerOrReadOnly]
+
+
+class UserUpdateApiView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = UserCreatListSerializer
+    permission_classes = [IsOwnerOrReadOnly]
+    pagination_class = CustomPageNumberPagination
+
+    def get_queryset(self):
+        if self.request.user.user_roles == ORDINARY_USER:
+            return Users.objects.filter(username=self.request.user.username)
+        elif self.request.user.user_roles == ADMIN:
+            return Users.objects.filter(is_superuser=False)
+        else:
+            return Users.objects.all()

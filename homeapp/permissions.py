@@ -1,5 +1,5 @@
 from rest_framework import permissions
-from usersapp.models import ADMIN, MANAGER
+from usersapp.models import ADMIN, ORDINARY_USER
 from rest_framework.exceptions import ValidationError
 
 
@@ -9,6 +9,14 @@ class IsAdminOrManangerOrReadOnly(permissions.BasePermission):
             return True
 
         return bool(request.user.user_roles == ADMIN or request.user.is_superuser)
+
+
+class ManangerOrReadOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        return bool(request.user.is_superuser)
 
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
@@ -26,3 +34,12 @@ class IsOwnerOrReadOnlyPicture(permissions.BasePermission):
 
         return bool(
             obj.home.owner == request.user or request.user.user_roles == ADMIN or request.user.is_superuser)
+
+
+class IsOwnerOrReadOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        return bool(
+            request.user.user_roles == ADMIN or request.user.is_superuser or request.user.user_roles == ORDINARY_USER)
