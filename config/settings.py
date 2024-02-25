@@ -19,12 +19,13 @@ ENV = dotenv_values(os.path.join(BASE_DIR, ".env"))  # .env papkani ulash
 
 TWILIO_ACCOUNT_SID = ENV.get('TWILIO_ACCOUNT_SID')  # .env papka ichidan olib beradi
 TWILIO_AUTH_TOKEN = ENV.get('TWILIO_AUTH_TOKEN')
+SECRET_KEY = ENV.get('SECRET_KEY')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-aid=79vj72xm!b=()gzp@l8_$)yjclc-wcqfu%x76g26qt2b71'
+SECRET_KEY = SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
