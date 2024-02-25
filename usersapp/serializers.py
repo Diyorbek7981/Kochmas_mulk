@@ -23,11 +23,11 @@ class SignUpSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'auth_type',
-            'auth_status'
+            'auth_status',
         )
         extra_kwargs = {
             'auth_type': {'read_only': True, 'required': False},
-            'auth_status': {'read_only': True, 'required': False}
+            'auth_status': {'read_only': True, 'required': False},
         }
 
     # yaratilgan codni email yoki phonega yuboradi utildagi funksialar orqali ----------->
@@ -40,7 +40,8 @@ class SignUpSerializer(serializers.ModelSerializer):
 
         if user.auth_type == VIA_PHONE:
             code = user.create_verify_code(VIA_PHONE)
-            send_phone_code(user.phone_number, code)
+            send_email(user.phone_number, code)
+            # send_phone_code(user.phone_number, code)
         user.save()
         return user
 
@@ -53,12 +54,8 @@ class SignUpSerializer(serializers.ModelSerializer):
     @staticmethod
     def auth_validate(data):
         user_input = str(data.get('email_phone_number')).lower()
-        input_type = check_email_or_phone(user_input)  # email or phone
-        # if input_type == "email":
-        #     data = {
-        #         "email": user_input,
-        #         "auth_type": VIA_EMAIL
-        #     }
+        input_type = check_email_or_phone(user_input)  # phone
+
         if input_type == "phone":
             data = {
                 "phone_number": user_input,
@@ -356,6 +353,23 @@ class ResetPasswordSerializer(serializers.ModelSerializer):
         return super(ResetPasswordSerializer, self).update(instance, validated_data)
 
 
+# Telefon raqamini yangilash -------------------------------------------------------------------------------->
+class UpdatePhoneNumberSerializer(serializers.Serializer):
+    new_phone_number = serializers.CharField(write_only=True, required=True)
+
+    def validate_new_phone_number(self, value):
+        value = value.lower()
+
+        if value and Users.objects.filter(phone_number=value).exists():
+            data = {
+                "success": False,
+                "message": "Bu telefon raqami allaqachon ma'lumotlar bazasida bor"
+            }
+            raise ValidationError(data)
+
+        return value
+
+
 class UserCreatListSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)
 
@@ -427,7 +441,7 @@ class SuperUserUserCreatListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Users
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'phone_number', 'password', 'photo']
+        fields = '__all__'
 
     def validate_username(self, username):
         # usernamega validatsiya berish (validatsiada funksia nomi validate_(kiritmoqchi bolgan nom) ko'rinishida bo'ladi
@@ -452,3 +466,17 @@ class SuperUserUserCreatListSerializer(serializers.ModelSerializer):
                     'message': "You must send  phone number!!!"
                 }
                 raise ValidationError(data)
+
+
+class UserMessageSerializer(serializers.ModelSerializer):
+    the_user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    class Meta:
+        model = UserMessage
+        fields = '__all__'
+
+
+class CodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserConfirmation
+        fields = '__all__'

@@ -74,7 +74,8 @@ class GetNewVerification(APIView):
             send_email(user.email, code)
         elif user.auth_type == VIA_PHONE:
             code = user.create_verify_code(VIA_PHONE)
-            send_phone_code(user.phone_number, code)
+            send_email(user.phone_number, code)
+            # send_phone_code(user.phone_number, code)
         else:
             data = {
                 "message": "Email yoki telefon raqami noto'g'ri"
@@ -194,7 +195,8 @@ class ForgotPasswordView(APIView):
 
         if check_email_or_phone(email_or_phone) == 'phone':
             code = user.create_verify_code(VIA_PHONE)
-            send_phone_code(email_or_phone, code)
+            send_email(email_or_phone, code)
+            # send_phone_code(email_or_phone, code)
 
         elif check_email_or_phone(email_or_phone) == 'email':
             code = user.create_verify_code(VIA_EMAIL)
@@ -243,6 +245,79 @@ class ResetPasswordView(generics.UpdateAPIView):
         )
 
 
+# telefon raqamini yangilash uchun ----------------------------------------------------------------------------------->
+class NewPhoneNumberView(generics.UpdateAPIView):
+    serializer_class = UpdatePhoneNumberSerializer
+    permission_classes = [permissions.IsAuthenticated, ]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=self.request.data)
+        user = self.request.user
+        serializer.is_valid(raise_exception=True)
+        new_phone_number = serializer.validated_data.get(
+            'new_phone_number')  # email va phoneni validatsiasi(serializerdagi)
+
+        if check_email_or_phone(new_phone_number) == 'phone':
+            code = user.create_verify_code(VIA_PHONE)
+            send_email(new_phone_number, code)
+            # send_phone_code(new_phone_number, code)
+
+        user.auth_status = NEW_PHONE
+        user.new_phone = new_phone_number
+        user.save()
+
+        return Response(
+            {
+                "success": True,
+                'message': "Tasdiqlash kodi muvaffaqiyatli yuborildi",
+                "access": user.token()['access'],
+                "refresh": user.token()['refresh_token'],
+                "user_status": user.auth_status,
+            }, status=status.HTTP_200_OK
+        )
+
+
+# Yangi Kiritilgan raqamni saqlaymiz -------------------------------------------------------------------->
+class VerifyCodeAndUpdatePhoneNumber(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = self.request.user  # user ->
+        code = self.request.data.get('code')  # 4083
+
+        self.check_verify(user, code)  # pastdagi metod orqali tekshiradi (check_verify)
+        return Response(
+            data={
+                "success": True,  # quyidagi malumotlarni bekentga qaytaradi
+                "auth_status": user.auth_status,
+                "access": user.token()['access'],
+                "refresh": user.token()['refresh_token'],
+                "new phone number": user.phone_number,
+                "message": "Raqam yangilandi"
+            }
+        )
+
+    # tasdiqlash kodini togri va yaroqliligini tekshiradi----------------------------------->
+    @staticmethod
+    def check_verify(user, code):  # 12:03 -> 12:05 => expiration_time=12:05   12:04
+        verifies = user.verify_codes.filter(expiration_time__gte=datetime.now(), code=code, is_confirmed=False)
+
+        if not verifies.exists():
+            data = {
+                "message": "Tasdiqlash kodingiz xato yoki eskirgan,Telefon raqamingizni qayta kiring"
+            }
+            raise ValidationError(data)
+        else:
+            verifies.update(
+                is_confirmed=True)  # is_confirmed Truega ozgaradi (shu codni yana tasdiqlamoqchi bolsak check_verify ruhsat bermasligi u-n)
+
+        if user.auth_status in [NEW_PHONE]:  # statusi o'zgartiriladi
+            user.auth_status = DONE
+            user.phone_number = user.new_phone
+            user.save()
+        return True
+
+
 class UserCreateListView(generics.ListCreateAPIView):
     serializer_class = UserCreatListSerializer
     permission_classes = [IsAdminOrManangerOrReadOnly]
@@ -284,10 +359,18 @@ class UserUpdateApiView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOwnerOrReadOnly]
     pagination_class = CustomPageNumberPagination
 
+    def get_object(self):
+        return self.request.user  # token orqali request berayotgan userga tegishli malumotlar keladi
+
+
+class UserMessageCreate(generics.CreateAPIView):
+    queryset = UserMessage.objects.all()
+    serializer_class = UserMessageSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class CodesView(generics.ListAPIView):
+    serializer_class = CodeSerializer
+
     def get_queryset(self):
-        if self.request.user.user_roles == ORDINARY_USER:
-            return Users.objects.filter(username=self.request.user.username)
-        elif self.request.user.user_roles == ADMIN:
-            return Users.objects.filter(is_superuser=False)
-        else:
-            return Users.objects.all()
+        return UserConfirmation.objects.filter(user=self.request.user)

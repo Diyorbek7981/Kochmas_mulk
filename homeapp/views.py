@@ -56,11 +56,11 @@ class HomeModelSearchView(generics.ListAPIView):
                 area1 = serializer.validated_data['up_area']
 
                 if area is not None and area1 is not None:
-                    area = min(area, area1)
-                    area1 = max(area, area1)
+                    area_min = min(area, area1)
+                    area_max = max(area, area1)
 
                     queryset = queryset.filter(
-                        Q(area__gte=area, area__lte=area1))
+                        Q(area__gte=area_min, area__lte=area_max))
 
                 queryset = queryset.all()
 
@@ -113,6 +113,11 @@ class HomeModelSearchView(generics.ListAPIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+class SearchView(generics.ListAPIView):
+    queryset = HomeModel.objects.all()
+    serializer_class = HomeSerializer
+
     def get_queryset(self):
         queryset = super().get_queryset()
         search_terms = self.request.query_params.getlist('q')
@@ -140,29 +145,35 @@ class HomeModelSearchView(generics.ListAPIView):
             return queryset
 
 
-class HomeView(generics.ListCreateAPIView):
+class HomeListView(generics.ListAPIView):
     queryset = HomeModel.objects.all()
     serializer_class = HomeSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = CustomPageNumberPagination
 
 
-class HomeViewALL(generics.RetrieveUpdateDestroyAPIView):
+class HomeCreateView(generics.CreateAPIView):
     queryset = HomeModel.objects.all()
     serializer_class = HomeSerializer
     permission_classes = [IsOwnerOrReadOnly]
     pagination_class = CustomPageNumberPagination
-    http_method_names = ['patch', 'put', 'post', 'get']
 
 
-class PictureView(generics.ListCreateAPIView):
+class HomeViewAll(generics.RetrieveUpdateDestroyAPIView):
+    queryset = HomeModel.objects.all()
+    serializer_class = HomeSerializer
+    permission_classes = [IsOwnerOrReadOnly]
+    pagination_class = CustomPageNumberPagination
+
+
+class PictureCreateView(generics.CreateAPIView):
     queryset = PictureModel.objects.all()
     serializer_class = PictureSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = CustomPageNumberPagination
 
-    def get_queryset(self):
-        return PictureModel.objects.filter(home__owner=self.request.user)
+    # def get_queryset(self):
+    #     return PictureModel.objects.filter(home__owner=self.request.user)
 
 
 class PictureViewALL(generics.RetrieveUpdateDestroyAPIView):
@@ -171,30 +182,13 @@ class PictureViewALL(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOwnerOrReadOnlyPicture]
 
 
-class TypeView(generics.ListCreateAPIView):
-    queryset = TypeModel.objects.all()
-    serializer_class = TypeSerializer
-    permission_classes = [IsAdminOrManangerOrReadOnly]
+class MyHomeView(generics.ListAPIView):
+    serializer_class = HomeSerializer
+    permission_classes = [IsOwnerOrReadOnly]
     pagination_class = CustomPageNumberPagination
 
-
-class TypeViewALL(generics.RetrieveUpdateDestroyAPIView):
-    queryset = TypeModel.objects.all()
-    serializer_class = TypeSerializer
-    permission_classes = [IsAdminOrManangerOrReadOnly]
-
-
-class HomeTypeView(generics.ListCreateAPIView):
-    queryset = HomeTypeModel.objects.all()
-    serializer_class = HomeTypeSerializer
-    permission_classes = [IsAdminOrManangerOrReadOnly]
-    pagination_class = CustomPageNumberPagination
-
-
-class HomeTypeViewALL(generics.RetrieveUpdateDestroyAPIView):
-    queryset = HomeTypeModel.objects.all()
-    serializer_class = HomeTypeSerializer
-    permission_classes = [IsAdminOrManangerOrReadOnly]
+    def get_queryset(self):
+        return HomeModel.objects.filter(owner=self.request.user)
 
 
 class HomeLikeListView(generics.ListAPIView):
@@ -235,3 +229,42 @@ class HomeLikeApiView(APIView):
                 "data": serializer.data
             }
             return Response(data, status=status.HTTP_201_CREATED)
+
+
+class TypeView(generics.ListCreateAPIView):
+    queryset = TypeModel.objects.all()
+    serializer_class = TypeSerializer
+    permission_classes = [IsAdminOrManangerOrReadOnly]
+    pagination_class = CustomPageNumberPagination
+
+
+class TypeViewALL(generics.RetrieveUpdateDestroyAPIView):
+    queryset = TypeModel.objects.all()
+    serializer_class = TypeSerializer
+    permission_classes = [IsAdminOrManangerOrReadOnly]
+
+
+class HomeTypeView(generics.ListCreateAPIView):
+    queryset = HomeTypeModel.objects.all()
+    serializer_class = HomeTypeSerializer
+    permission_classes = [IsAdminOrManangerOrReadOnly]
+    pagination_class = CustomPageNumberPagination
+
+
+class HomeTypeViewALL(generics.RetrieveUpdateDestroyAPIView):
+    queryset = HomeTypeModel.objects.all()
+    serializer_class = HomeTypeSerializer
+    permission_classes = [IsAdminOrManangerOrReadOnly]
+
+
+class ConfortTypeView(generics.ListCreateAPIView):
+    queryset = ComforsTypeModel.objects.all()
+    serializer_class = ConforTypeSerializer
+    permission_classes = [IsAdminOrManangerOrReadOnly]
+    pagination_class = CustomPageNumberPagination
+
+
+class ConfortTypeViewAll(generics.ListCreateAPIView):
+    queryset = ComforsTypeModel.objects.all()
+    serializer_class = ConforTypeSerializer
+    permission_classes = [IsAdminOrManangerOrReadOnly]

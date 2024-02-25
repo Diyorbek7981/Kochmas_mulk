@@ -72,6 +72,8 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Users
         fields = ('id', 'username', 'photo')
+        ref_name = 'hi'
+        # shunga o'xshash serializer yana boshqa joyda bo'lsa ref_name qo'yiladi
 
 
 class HomeLikeSerializer(serializers.ModelSerializer):

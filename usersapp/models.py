@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 import random
 import uuid  # takrorlanishlar ehtimoli kam
-from django.core.validators import FileExtensionValidator
+from django.core.validators import FileExtensionValidator, MaxLengthValidator
 from datetime import datetime, timedelta
 
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -21,7 +21,8 @@ class BaseModel(models.Model):
 # Create your models here.
 ORDINARY_USER, MANAGER, ADMIN = ("ordinary_user", 'manager', 'admin')
 VIA_EMAIL, VIA_PHONE = ("via_email", "via_phone")
-NEW, CODE_VERIFIED, DONE, PHOTO_DONE, FORGET_PASS = ('new', 'code_verified', 'done', 'photo_done', 'forget_password')
+NEW, CODE_VERIFIED, DONE, PHOTO_DONE, FORGET_PASS, NEW_PHONE = ('new', 'code_verified', 'done',
+                                                                'photo_done', 'forget_password', 'new_phone')
 
 
 class Users(AbstractUser, BaseModel):
@@ -51,6 +52,7 @@ class Users(AbstractUser, BaseModel):
                                    default=NEW)  # signup jarayonini birin-ketin bo'lishi uchun
     email = models.EmailField(null=True, blank=True, unique=True)
     phone_number = models.CharField(max_length=13, null=True, blank=True, unique=True)
+    new_phone = models.CharField(max_length=13, null=True, blank=True, unique=True)
     photo = models.ImageField(upload_to='user_photos/', null=True, blank=True,
                               validators=[
                                   FileExtensionValidator(allowed_extensions=['jpg', 'jpeg', 'png', 'heic', 'heif'])])
@@ -68,7 +70,7 @@ class Users(AbstractUser, BaseModel):
         UserConfirmation.objects.create(
             user_id=self.id,
             verify_type=verify_type,
-            code=code
+            code=code,
         )
         return code
 
@@ -134,8 +136,11 @@ class UserConfirmation(BaseModel):
     expiration_time = models.DateTimeField(null=True)
     is_confirmed = models.BooleanField(default=False)
 
+    class Meta:
+        ordering = ['-created_time']
+
     def __str__(self):
-        return str(self.user.__str__())
+        return str(self.user)
 
     # yaratilgan codni yaroqlilik muddatini belgilaydi
     def save(self, *args, **kwargs):
@@ -144,3 +149,13 @@ class UserConfirmation(BaseModel):
         else:
             self.expiration_time = datetime.now() + timedelta(minutes=PHONE_EXPIRE)
         super(UserConfirmation, self).save(*args, **kwargs)
+
+
+class UserMessage(models.Model):
+    message = models.TextField(validators=[MaxLengthValidator(1000)])
+    to_user = models.ForeignKey(Users, models.CASCADE, related_name='to_user')
+    the_user = models.ForeignKey(Users, models.CASCADE, related_name='from_user')
+    created_time = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.the_user} -> {self.to_user}"

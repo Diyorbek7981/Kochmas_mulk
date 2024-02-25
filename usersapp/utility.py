@@ -25,7 +25,7 @@ def check_email_or_phone(email_or_phone):
     else:
         data = {
             "success": False,
-            "message": "Email yoki telefon raqamingiz notogri"
+            "message": "Kiritilgan malumot noto'g'ri"
         }
         raise ValidationError(data)
 

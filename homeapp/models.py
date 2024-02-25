@@ -126,12 +126,14 @@ class SearchModel(models.Model):
                                       choices=CHOICES,
                                       null=True,
                                       blank=True)
-    from_area = models.IntegerField(
-        validators=[MinValueValidator(0)],
-        null=True, blank=True)
-    up_area = models.IntegerField(
-        validators=[MinValueValidator(0)],
-        null=True, blank=True)
+    from_area = models.DecimalField(max_digits=5, decimal_places=2,
+                                    validators=[MinValueValidator(0)],
+                                    null=True,
+                                    blank=True)
+    up_area = models.DecimalField(max_digits=5, decimal_places=2,
+                                  validators=[MinValueValidator(0)],
+                                  null=True,
+                                  blank=True)
     floor = models.IntegerField(null=True,
                                 blank=True,
                                 validators=[MinValueValidator(0)])
