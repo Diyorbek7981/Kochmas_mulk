@@ -152,6 +152,12 @@ class HomeListView(generics.ListAPIView):
     pagination_class = CustomPageNumberPagination
 
 
+class HomeDetailView(generics.RetrieveAPIView):
+    queryset = HomeModel.objects.all()
+    serializer_class = HomeListSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
 class HomeCreateView(generics.CreateAPIView):
     queryset = HomeModel.objects.all()
     serializer_class = HomeCreateSerializer

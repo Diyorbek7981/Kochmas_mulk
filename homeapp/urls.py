@@ -4,6 +4,7 @@ from .views import *
 urlpatterns = [
     path('home_list/', HomeListView.as_view()),
     path('home_create/', HomeCreateView.as_view()),
+    path('home_detail/<int:pk>', HomeDetailView.as_view()),
     path('home_retrive_update_delete/<int:pk>', HomeViewAll.as_view()),
     path('pic_create/', PictureCreateView.as_view()),
     path('picall/<int:pk>', PictureViewALL.as_view()),

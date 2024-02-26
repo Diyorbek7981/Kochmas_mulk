@@ -18,12 +18,13 @@ class HomeListSerializer(ModelSerializer):
 
     me_like = serializers.SerializerMethodField('get_me_liked')  # like bosgan yoki yoqligini ko'rish uchun
     location_latlong = serializers.SerializerMethodField('get_location')
+    user_phone_number = serializers.ReadOnlyField(source='owner.phone_number')
 
     class Meta:
         model = HomeModel
         fields = ['id', 'type', 'home_type', 'location', 'location_latlong', 'count_rooms', 'area', 'floor',
-                  'building_floor', 'repair',
-                  'building_material', 'price', 'description', 'comforts', 'author', 'owner', 'created',
+                  'building_floor', 'repair', 'building_material', 'price', 'description', 'comforts', 'author',
+                  'owner', 'user_phone_number', 'created',
                   'updated', 'me_like']
 
     def get_me_liked(self, obj):
