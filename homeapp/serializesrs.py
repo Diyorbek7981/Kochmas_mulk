@@ -1,6 +1,7 @@
-from rest_framework import serializers, request
+from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 from .models import *
+from geopy.geocoders import Nominatim
 from rest_framework.exceptions import ValidationError
 
 
@@ -10,17 +11,18 @@ class SearchSerializer(ModelSerializer):
         fields = '__all__'
 
 
-class HomeSerializer(ModelSerializer):
-    owner = serializers.HiddenField(
-        default=serializers.CurrentUserDefault())  # user mizni yashirib unga aktiv bo'lgan foydalanuvchini o'rnatish uchun
+class HomeListSerializer(ModelSerializer):
     author = serializers.ReadOnlyField(
-        source='owner.username')  # avtor maydoni yaratib unga userni qiymatini beramiz get requestda ko'rib turish uchun
+        source='owner.username')
+    # avtor maydoni yaratib unga userni qiymatini beramiz get requestda ko'rib turish uchun
 
     me_like = serializers.SerializerMethodField('get_me_liked')  # like bosgan yoki yoqligini ko'rish uchun
+    location_latlong = serializers.SerializerMethodField('get_location')
 
     class Meta:
         model = HomeModel
-        fields = ['id', 'type', 'home_type', 'location', 'count_rooms', 'area', 'floor', 'building_floor', 'repair',
+        fields = ['id', 'type', 'home_type', 'location', 'location_latlong', 'count_rooms', 'area', 'floor',
+                  'building_floor', 'repair',
                   'building_material', 'price', 'description', 'comforts', 'author', 'owner', 'created',
                   'updated', 'me_like']
 
@@ -30,12 +32,49 @@ class HomeSerializer(ModelSerializer):
         request = self.context.get('request', None)
         if request and request.user.is_authenticated:
             try:
-                like = HomeLike.objects.get(home=obj, author=request.user)
+                HomeLike.objects.get(home=obj, author=request.user)
                 return True
             except HomeLike.DoesNotExist:
                 return False
 
         return False
+
+    @staticmethod
+    def get_location(self):
+        location1 = self.location
+        geolocator = Nominatim(user_agent="address_geocoder")
+        location1 = geolocator.geocode(location1)
+        lat = location1.latitude
+        long = location1.longitude
+        location = [lat, long]
+
+        return location
+
+
+class HomeCreateSerializer(serializers.ModelSerializer):
+    owner = serializers.HiddenField(
+        default=serializers.CurrentUserDefault())
+    # user mizni yashirib unga aktiv bo'lgan foydalanuvchini o'rnatish uchun
+    author = serializers.ReadOnlyField(
+        source='owner.username')
+
+    class Meta:
+        model = HomeModel
+        fields = ['id', 'type', 'home_type', 'location', 'count_rooms', 'area', 'floor', 'building_floor', 'repair',
+                  'building_material', 'price', 'description', 'comforts', 'author', 'owner', 'created',
+                  'updated']
+
+    def validate_location(self, location):
+        location1 = location
+        geolocator = Nominatim(user_agent="address_geocoder")
+        location1 = geolocator.geocode(location1)
+        if location1 is None:
+            data = {
+                'success': False,
+                'message': "Joylashuv joyingizni to'g'ri kiriting"
+            }
+            raise ValidationError(data)
+        return location
 
 
 class PictureSerializer(ModelSerializer):

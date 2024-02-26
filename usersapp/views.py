@@ -4,7 +4,6 @@ from .serializers import *
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
@@ -361,12 +360,6 @@ class UserUpdateApiView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         return self.request.user  # token orqali request berayotgan userga tegishli malumotlar keladi
-
-
-class UserMessageCreate(generics.CreateAPIView):
-    queryset = UserMessage.objects.all()
-    serializer_class = UserMessageSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
 
 class CodesView(generics.ListAPIView):

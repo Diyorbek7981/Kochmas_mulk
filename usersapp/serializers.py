@@ -468,14 +468,6 @@ class SuperUserUserCreatListSerializer(serializers.ModelSerializer):
                 raise ValidationError(data)
 
 
-class UserMessageSerializer(serializers.ModelSerializer):
-    the_user = serializers.HiddenField(default=serializers.CurrentUserDefault())
-
-    class Meta:
-        model = UserMessage
-        fields = '__all__'
-
-
 class CodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserConfirmation

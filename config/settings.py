@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 import os
 from dotenv import dotenv_values  # dotenvdagi valularni olish uchun
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,7 +20,14 @@ ENV = dotenv_values(os.path.join(BASE_DIR, ".env"))  # .env papkani ulash
 
 TWILIO_ACCOUNT_SID = ENV.get('TWILIO_ACCOUNT_SID')  # .env papka ichidan olib beradi
 TWILIO_AUTH_TOKEN = ENV.get('TWILIO_AUTH_TOKEN')
+
 SECRET_KEY = ENV.get('SECRET_KEY')
+
+NAME = ENV.get('NAME')
+USER = ENV.get('USER')
+PASSWORD = ENV.get('PASSWORD')
+HOST = ENV.get('HOST')
+PORT = ENV.get('PORT')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -88,8 +96,12 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': NAME,
+        'USER': USER,
+        'PASSWORD': PASSWORD,
+        'HOST': HOST,
+        'PORT': PORT,
     }
 }
 
@@ -162,8 +174,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ]
 }
-
-from datetime import timedelta
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=24),

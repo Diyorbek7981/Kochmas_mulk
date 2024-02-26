@@ -149,13 +149,3 @@ class UserConfirmation(BaseModel):
         else:
             self.expiration_time = datetime.now() + timedelta(minutes=PHONE_EXPIRE)
         super(UserConfirmation, self).save(*args, **kwargs)
-
-
-class UserMessage(models.Model):
-    message = models.TextField(validators=[MaxLengthValidator(1000)])
-    to_user = models.ForeignKey(Users, models.CASCADE, related_name='to_user')
-    the_user = models.ForeignKey(Users, models.CASCADE, related_name='from_user')
-    created_time = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.the_user} -> {self.to_user}"

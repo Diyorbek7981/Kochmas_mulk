@@ -12,9 +12,3 @@ class UserAdmin(admin.ModelAdmin):
 @admin.register(UserConfirmation)
 class UserConfirmationAdmin(admin.ModelAdmin):
     list_display = ['id']
-
-
-@admin.register(UserMessage)
-class UserMessageAdmin(admin.ModelAdmin):
-    list_display = ['id', 'the_user', 'to_user']
-    list_display_links = ['id', 'the_user', 'to_user']

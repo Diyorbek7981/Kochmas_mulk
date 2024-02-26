@@ -6,10 +6,10 @@ from .permissions import *
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
+from .pagination import CustomPageNumberPagination
 # search uchun
 from functools import reduce
 import operator
-from .pagination import CustomPageNumberPagination
 
 
 # Create your views here.
@@ -108,7 +108,7 @@ class HomeModelSearchView(generics.ListAPIView):
                 # elif up_lo == 1:
                 #     queryset = queryset.filter(Q(price__gte=price))
 
-                serializer = HomeSerializer(queryset, many=True)
+                serializer = HomeListSerializer(queryset, many=True)
                 return Response(serializer.data)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -116,7 +116,7 @@ class HomeModelSearchView(generics.ListAPIView):
 
 class SearchView(generics.ListAPIView):
     queryset = HomeModel.objects.all()
-    serializer_class = HomeSerializer
+    serializer_class = HomeListSerializer
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -147,21 +147,20 @@ class SearchView(generics.ListAPIView):
 
 class HomeListView(generics.ListAPIView):
     queryset = HomeModel.objects.all()
-    serializer_class = HomeSerializer
+    serializer_class = HomeListSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = CustomPageNumberPagination
 
 
 class HomeCreateView(generics.CreateAPIView):
     queryset = HomeModel.objects.all()
-    serializer_class = HomeSerializer
+    serializer_class = HomeCreateSerializer
     permission_classes = [IsOwnerOrReadOnly]
-    pagination_class = CustomPageNumberPagination
 
 
 class HomeViewAll(generics.RetrieveUpdateDestroyAPIView):
     queryset = HomeModel.objects.all()
-    serializer_class = HomeSerializer
+    serializer_class = HomeCreateSerializer
     permission_classes = [IsOwnerOrReadOnly]
     pagination_class = CustomPageNumberPagination
 
@@ -183,7 +182,7 @@ class PictureViewALL(generics.RetrieveUpdateDestroyAPIView):
 
 
 class MyHomeView(generics.ListAPIView):
-    serializer_class = HomeSerializer
+    serializer_class = HomeListSerializer
     permission_classes = [IsOwnerOrReadOnly]
     pagination_class = CustomPageNumberPagination
 

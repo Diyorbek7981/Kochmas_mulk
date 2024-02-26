@@ -4,6 +4,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator, MaxLeng
 from usersapp.models import Users
 from django.db.models import UniqueConstraint
 from django.core.validators import FileExtensionValidator
+from geopy.geocoders import Nominatim
 
 CHOICES = (
     (1, '1 xona'),
