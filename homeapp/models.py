@@ -85,7 +85,7 @@ class HomeModel(models.Model):
                                 decimal_places=2,
                                 validators=[MinValueValidator(0)])
     description = models.TextField(validators=[MaxLengthValidator(1000)])
-    comforts = models.ManyToManyField(ComforsTypeModel, null=True, blank=True)
+    comforts = models.ManyToManyField(ComforsTypeModel)
     owner = models.ForeignKey(Users, on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
