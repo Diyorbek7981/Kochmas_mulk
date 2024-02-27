@@ -7,7 +7,6 @@ urlpatterns = [
     path('home_detail/<int:pk>', HomeDetailView.as_view()),
     path('home_retrive_update_delete/<int:pk>', HomeViewAll.as_view()),
     path('pic_create/', PictureCreateView.as_view()),
-    path('picall/<int:pk>', PictureViewALL.as_view()),
     path('my_home/', MyHomeView.as_view()),
     path('like_list/', HomeLikeListView.as_view()),
     path('like_create_delete/<int:pk>', HomeLikeApiView.as_view()),

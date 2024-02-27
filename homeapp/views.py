@@ -177,9 +177,6 @@ class PictureCreateView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = CustomPageNumberPagination
 
-    # def get_queryset(self):
-    #     return PictureModel.objects.filter(home__owner=self.request.user)
-
 
 class PictureViewALL(generics.RetrieveUpdateDestroyAPIView):
     queryset = PictureModel.objects.all()

@@ -11,6 +11,16 @@ class SearchSerializer(ModelSerializer):
         fields = '__all__'
 
 
+class PictureSerializer(ModelSerializer):
+    pic = serializers.ImageField(validators=[FileExtensionValidator(allowed_extensions=[
+        'jpg', 'jpeg', 'png', 'heic', 'heif'
+    ])])
+
+    class Meta:
+        model = PictureModel
+        fields = ['pic', 'created', 'updated']
+
+
 class HomeListSerializer(ModelSerializer):
     author = serializers.ReadOnlyField(
         source='owner.username')
@@ -25,7 +35,12 @@ class HomeListSerializer(ModelSerializer):
         fields = ['id', 'type', 'home_type', 'location', 'location_latlong', 'count_rooms', 'area', 'floor',
                   'building_floor', 'repair', 'building_material', 'price', 'description', 'comforts', 'author',
                   'owner', 'user_phone_number', 'created',
-                  'updated', 'me_like']
+                  'updated', 'me_like', 'pictures']
+
+    pictures = PictureSerializer(many=True)
+
+    # serializer ichida serializer shu homga tegishli rasmlarni olib keladi
+    # (pictures nomi piture modelidagi related nameni nomi)
 
     def get_me_liked(self, obj):
         # Request berayotgan user saytda ro'yhatdan o'tgan bolsa homeni likelarini ko'radi
@@ -63,7 +78,7 @@ class HomeCreateSerializer(serializers.ModelSerializer):
         model = HomeModel
         fields = ['id', 'type', 'home_type', 'location', 'count_rooms', 'area', 'floor', 'building_floor', 'repair',
                   'building_material', 'price', 'description', 'comforts', 'author', 'owner', 'created',
-                  'updated']
+                  'updated', 'pictures']
 
     def validate_location(self, location):
         location1 = location
@@ -76,16 +91,6 @@ class HomeCreateSerializer(serializers.ModelSerializer):
             }
             raise ValidationError(data)
         return location
-
-
-class PictureSerializer(ModelSerializer):
-    pic = serializers.ImageField(validators=[FileExtensionValidator(allowed_extensions=[
-        'jpg', 'jpeg', 'png', 'heic', 'heif'
-    ])])
-
-    class Meta:
-        model = PictureModel
-        fields = ['pic', 'home', 'created', 'updated']
 
 
 class TypeSerializer(ModelSerializer):

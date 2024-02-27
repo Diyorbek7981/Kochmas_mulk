@@ -105,7 +105,7 @@ class PictureModel(models.Model):
                                 FileExtensionValidator(allowed_extensions=[
                                     'jpg', 'jpeg', 'png', 'heic', 'heif'
                                 ])])
-    home = models.ForeignKey(HomeModel, on_delete=models.CASCADE)
+    home = models.ForeignKey(HomeModel, on_delete=models.CASCADE, related_name='pictures')
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
