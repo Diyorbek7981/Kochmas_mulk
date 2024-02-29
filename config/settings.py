@@ -39,8 +39,10 @@ SECRET_KEY = SECRET_KEY
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
+# barcha hostlarda
 CORS_ORIGIN_ALLOW_ALL = True
 CSRF_TRUSTED_ORIGINS = ['https://back.diyorbek-dev.uz/']
+# csrf da hato bermasligi uchun (pip install  django-cors-headers)
 
 # Application definition
 
