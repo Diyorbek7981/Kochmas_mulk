@@ -41,7 +41,7 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 # barcha hostlarda
 CORS_ALLOW_ALL_ORIGINS = True
-CSRF_TRUSTED_ORIGINS = ['https://back.diyorbek-dev.uz/']
+CSRF_TRUSTED_ORIGINS = ['https://back.diyorbek-dev.uz']
 # csrf da hato bermasligi uchun (pip install  django-cors-headers)
 
 # Application definition
