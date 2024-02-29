@@ -39,6 +39,8 @@ SECRET_KEY = SECRET_KEY
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
+CORS_ORIGIN_ALLOW_ALL = True
+CSRF_TRUSTED_ORIGINS = ['https://back.diyorbek-dev.uz/']
 
 # Application definition
 
@@ -58,6 +60,7 @@ INSTALLED_APPS = [
     'usersapp',
     'drf_yasg',
     'rest_framework.authtoken',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
