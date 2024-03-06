@@ -78,7 +78,7 @@ class HomeCreateSerializer(serializers.ModelSerializer):
         model = HomeModel
         fields = ['id', 'type', 'home_type', 'location', 'count_rooms', 'area', 'floor', 'building_floor', 'repair',
                   'building_material', 'price', 'description', 'comforts', 'author', 'owner', 'created',
-                  'updated', 'pictures']
+                  'updated']
 
     def validate_location(self, location):
         location1 = location
