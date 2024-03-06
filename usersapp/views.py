@@ -368,4 +368,4 @@ class CodesView(generics.ListAPIView):
     serializer_class = CodeSerializer
 
     def get_queryset(self):
-        return UserConfirmation.objects.filter(user=self.request.user)
+        return UserConfirmation.objects.filter(user=self.request.user).first()
