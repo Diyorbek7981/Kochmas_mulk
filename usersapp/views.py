@@ -117,17 +117,19 @@ class ChangeUserInfoView(generics.UpdateAPIView):
             "success": True,
             "message": "User muvofaqiyatli yangilandi",
             "auth_status": self.request.user.auth_status,
-        },
+        }
         return Response(data, status=status.HTTP_200_OK)
 
-    def partial_update(self, request, *args, **kwargs):  # patch requesti u-n ishlatiladi
-        super(ChangeUserInfoView, self).partial_update(request, *args, **kwargs)
-        data = {
-            "success": True,
-            "message": "User muvofaqiyatli yangilandi",
-            "auth_status": self.request.user.auth_status,
-        },
-        return Response(data, status=status.HTTP_200_OK)
+    # Patch uchun
+    # def partial_update(self, request, *args, **kwargs):  # patch requesti u-n ishlatiladi
+    #     super(ChangeUserInfoView, self).partial_update(request, *args, **kwargs)
+    #
+    #     data = {
+    #         "success": True,
+    #         "message": "User muvofaqiyatli yangilandi",
+    #         "auth_status": self.request.user.auth_status,
+    #     }
+    #     return Response(data, status=status.HTTP_200_OK)
 
 
 # Rasm update qilish uchun------------------------------------------------------------------------------>

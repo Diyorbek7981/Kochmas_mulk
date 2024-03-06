@@ -135,6 +135,13 @@ class ChangeUserSerializer(serializers.Serializer):  # serializers.Serializer va
                 "message": "User name raqmlardan tashkil topmasligi kerak"
             }
             raise ValidationError(data)
+
+        if Users.objects.filter(username=username).exists():
+            data = {
+                "message": "Bunday Username allaqachon mavjud"
+            }
+            raise ValidationError(data)
+
         return username
 
     def validate_email_phone_number(self, value):  # user nameni uniklikka tekshiradi
@@ -159,7 +166,7 @@ class ChangeUserSerializer(serializers.Serializer):  # serializers.Serializer va
             instance.set_password(validated_data.get('password'))
             # parol kiritilgan bolsa set_password orqali heshlab beradi
 
-        if instance.auth_status == CODE_VERIFIED:  # user statusini o'zgartiradi
+        if instance.auth_status in [CODE_VERIFIED,DONE,PHOTO_DONE]:  # user statusini o'zgartiradi
             instance.auth_status = DONE
 
         else:
