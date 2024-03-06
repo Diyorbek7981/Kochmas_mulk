@@ -364,8 +364,16 @@ class UserUpdateApiView(generics.RetrieveUpdateDestroyAPIView):
         return self.request.user  # token orqali request berayotgan userga tegishli malumotlar keladi
 
 
-class CodesView(generics.ListAPIView):
+class CodesView(APIView):
     serializer_class = CodeSerializer
 
-    def get_queryset(self):
-        return UserConfirmation.objects.filter(user=self.request.user).first()
+    def get(self, request):
+        code = UserConfirmation.objects.filter(user=self.request.user).first()
+
+        data = {
+            "code": code.code,
+            "verify_type": code.verify_type,
+            "expiration_time": code.expiration_time,
+            "is_confirmed": code.is_confirmed
+        }
+        return Response(data, status=status.HTTP_200_OK)
