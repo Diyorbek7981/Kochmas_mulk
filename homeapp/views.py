@@ -161,7 +161,7 @@ class HomeDetailView(generics.RetrieveAPIView):
 class HomeCreateView(generics.CreateAPIView):
     queryset = HomeModel.objects.all()
     serializer_class = HomeCreateSerializer
-    permission_classes = [IsOwnerOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
 
 
 class HomeViewAll(generics.RetrieveUpdateDestroyAPIView):
