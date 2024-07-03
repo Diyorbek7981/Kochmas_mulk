@@ -10,7 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 import os
-from dotenv import dotenv_values  # dotenvdagi valularni olish uchun
+from dotenv import dotenv_values  # dotenvdagi valularni olish uchun (pip install python-dotenv)
 from pathlib import Path
 from datetime import timedelta
 
@@ -151,7 +151,7 @@ USE_I18N = True
 
 USE_TZ = True
 
-USE_L10N = True  # ncsdcdbsbcskdbcksbc
+USE_L10N = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
