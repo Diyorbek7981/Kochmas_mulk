@@ -60,9 +60,9 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'homeapp',
     'usersapp',
-    'drf_yasg',
+    'drf_yasg',   # swagger uchun
     'rest_framework.authtoken',
-    'corsheaders',
+    'corsheaders', # csrf uchun
 ]
 
 MIDDLEWARE = [
